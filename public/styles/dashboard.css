@@ -1,0 +1,171 @@
+/* dashboard.css - styles only for the dashboard (dashboard.ejs).
+   Colours, buttons and the header come from app.css. */
+
+.dash-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 28px 24px 64px;
+}
+
+.dash-page h1 {
+  font-size: 32px;
+  letter-spacing: -1px;
+  line-height: 1.2;
+}
+
+.subtitle {
+  margin-bottom: 22px;
+  color: var(--muted);
+}
+
+/* ---------------- Number tiles ---------------- */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.tile {
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.tile strong {
+  display: block;
+  font-size: 26px;
+  letter-spacing: -0.5px;
+  color: var(--accent);
+}
+
+.tile span {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ---------------- Section headings ---------------- */
+.group-title {
+  margin: 30px 0 14px;
+  font-size: 20px;
+  letter-spacing: -0.3px;
+}
+
+/* ---------------- Chart cards ---------------- */
+.chart-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.card {
+  padding: 20px 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.card.wide {
+  grid-column: 1 / -1;
+}
+
+.card h2 {
+  margin-bottom: 14px;
+  font-size: 17px;
+}
+
+/* Chart.js needs a box with a fixed height to draw into */
+.chart-box {
+  position: relative;
+  height: 260px;
+}
+
+.none,
+.hint {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* ---------------- Cost per wear tables ---------------- */
+.mini {
+  margin: 14px 0 6px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+}
+
+.cpw {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.cpw td {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.cpw tr:last-child td { border-bottom: none; }
+.cpw a { font-weight: 600; }
+.cpw a:hover { color: var(--accent); }
+.cpw .muted { padding: 8px 12px; color: var(--muted); white-space: nowrap; }
+.cpw .num { text-align: right; font-weight: 700; white-space: nowrap; }
+.cpw .good { color: var(--accent); }
+.cpw .bad { color: var(--danger); }
+
+.card .hint { margin-bottom: 4px; }
+
+.unused { margin-bottom: 8px; }
+
+/* ---------------- Unused items ---------------- */
+.badge {
+  display: inline-block;
+  min-width: 26px;
+  margin-left: 6px;
+  padding: 1px 9px;
+  background: var(--accent-soft);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--accent);
+}
+
+.unused ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.unused li a {
+  display: inline-block;
+  padding: 6px 14px;
+  background: var(--accent-soft);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.unused li a:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ---------------- Tablets and phones ---------------- */
+@media (max-width: 900px) {
+}
+
+@media (max-width: 640px) {
+  .dash-page { padding: 24px 16px 48px; }
+  .tiles { grid-template-columns: repeat(2, 1fr); }
+  .chart-grid { grid-template-columns: 1fr; }
+  .chart-box { height: 230px; }
+}

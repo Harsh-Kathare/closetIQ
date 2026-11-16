@@ -1,0 +1,209 @@
+<%#
+  outfit-details.ejs - one outfit: view it, edit it, add or remove items.
+
+  Your GET /outfits/:id handler must pass:
+    user                 -> { full_name }
+    outfit               -> { outfit_id, outfit_name, description, created_at, is_favorite }
+    items                -> the items IN this outfit, each with: item_id, item_name, brand_name,
+                            image_url, availability_status, section, tags
+    availableItems       -> the user's OTHER items (not in this outfit), same fields
+    occasions            -> all occasions [ { occasion_id, occasion_name }, ... ]
+    selectedOccasionIds  -> array of numbers: the occasions this outfit already has
+    error                -> text of an error message, or null
+%>
+<% const outfitOccasions = occasions.filter(function (o) { return selectedOccasionIds.includes(o.occasion_id); }); %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= outfit.outfit_name %> - ClosetIQ</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/styles/app.css">
+  <link rel="stylesheet" href="/styles/outfit-details.css">
+</head>
+<body>
+
+  <%- include('partials/header', { active: 'outfits', user: user }) %>
+
+  <main class="details-page">
+
+    <a href="/outfits" class="back-link">&larr; Back to outfits</a>
+
+    <!-- ============ Title row ============ -->
+    <div class="title-row">
+      <div class="title-block">
+        <h1><%= outfit.outfit_name %></h1>
+        <p class="meta">
+          <%= items.length %> <%= items.length === 1 ? 'item' : 'items' %>
+          <% if (outfit.created_at) { %>
+            &bull; Created <%= new Date(outfit.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) %>
+          <% } %>
+        </p>
+      </div>
+
+      <div class="title-actions">
+        <!-- Heart: toggles favourite without reloading (script at the bottom) -->
+        <button type="button" class="heart <%= outfit.is_favorite ? 'on' : '' %>"
+                id="heartBtn" data-id="<%= outfit.outfit_id %>" aria-label="Toggle favourite">&#9829;</button>
+
+        <form action="/outfits/<%= outfit.outfit_id %>/delete" method="POST"
+              onsubmit="return confirm('Delete this outfit? Its plans and wear history will be deleted too.');">
+          <button type="submit" class="btn btn-small btn-danger">Delete outfit</button>
+        </form>
+      </div>
+    </div>
+
+    <% if (outfit.description) { %>
+      <p class="description"><%= outfit.description %></p>
+    <% } %>
+
+    <% if (outfitOccasions.length > 0) { %>
+      <div class="chips">
+        <% outfitOccasions.forEach(function (o) { %>
+          <span class="chip"><%= o.occasion_name %></span>
+        <% }); %>
+      </div>
+    <% } %>
+
+    <% if (error) { %>
+      <div class="error-box"><%= error %></div>
+    <% } %>
+
+    <!-- ============ Edit details (folds open/closed) ============ -->
+    <details class="panel" <%= error && error.indexOf('name') !== -1 ? 'open' : '' %>>
+      <summary>Edit name, description and occasions</summary>
+
+      <form action="/outfits/<%= outfit.outfit_id %>/edit" method="POST" class="edit-form">
+
+        <div class="field">
+          <label for="outfit_name">Outfit name</label>
+          <input type="text" id="outfit_name" name="outfit_name" maxlength="100"
+                 value="<%= outfit.outfit_name %>" required>
+        </div>
+
+        <div class="field">
+          <label for="description">Description (optional)</label>
+          <textarea id="description" name="description" rows="2"><%= outfit.description || '' %></textarea>
+        </div>
+
+        <div class="field">
+          <label>Occasions</label>
+          <div class="chips">
+            <% occasions.forEach(function (occasion) { %>
+              <label class="chip-check">
+                <input type="checkbox" name="occasion" value="<%= occasion.occasion_id %>"
+                       <%= selectedOccasionIds.includes(occasion.occasion_id) ? 'checked' : '' %>>
+                <span><%= occasion.occasion_name %></span>
+              </label>
+            <% }); %>
+          </div>
+          <input type="text" name="new_occasion" maxlength="50" class="other-occasion"
+                 placeholder="Another occasion? Type it here (optional)">
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save changes</button>
+      </form>
+    </details>
+
+    <!-- ============ Items in the outfit ============ -->
+    <h2 class="section-title">Items in this outfit</h2>
+
+    <div class="item-grid">
+      <% items.forEach(function (item) { %>
+        <article class="item-card">
+          <div class="item-image">
+            <% if (item.image_url) { %>
+              <img src="<%= item.image_url %>" alt="<%= item.item_name %>" loading="lazy">
+            <% } else { %>
+              <span class="item-letter"><%= item.item_name.charAt(0).toUpperCase() %></span>
+            <% } %>
+            <% if (item.availability_status !== 'Available') { %>
+              <span class="item-status"><%= item.availability_status %></span>
+            <% } %>
+          </div>
+
+          <div class="item-body">
+            <h3><%= item.item_name %></h3>
+            <p class="brand"><%= item.brand_name || 'No brand' %></p>
+            <div class="tags">
+              <% item.tags.forEach(function (tag) { %>
+                <span class="tag"><%= tag %></span>
+              <% }); %>
+            </div>
+          </div>
+
+          <div class="item-actions">
+            <form action="/outfits/<%= outfit.outfit_id %>/items/<%= item.item_id %>/remove" method="POST"
+                  onsubmit="return confirm('Remove this item from the outfit? The item stays in your wardrobe.');">
+              <button type="submit" class="btn btn-small btn-outline">Remove from outfit</button>
+            </form>
+          </div>
+        </article>
+      <% }); %>
+    </div>
+
+    <!-- ============ Add more items (folds open/closed) ============ -->
+    <details class="panel">
+      <summary>+ Add more items to this outfit</summary>
+
+      <% if (availableItems.length === 0) { %>
+        <p class="hint">All your wardrobe items are already in this outfit.</p>
+      <% } else { %>
+        <form action="/outfits/<%= outfit.outfit_id %>/items/add" method="POST">
+          <p class="hint">Tick the items you want to add, then press the button.</p>
+
+          <div class="choose-grid">
+            <% availableItems.forEach(function (item) { %>
+              <label class="choose-card">
+                <input type="checkbox" name="item" value="<%= item.item_id %>">
+                <span class="choose-body">
+                  <span class="choose-image">
+                    <% if (item.image_url) { %>
+                      <img src="<%= item.image_url %>" alt="" loading="lazy">
+                    <% } else { %>
+                      <span class="item-letter"><%= item.item_name.charAt(0).toUpperCase() %></span>
+                    <% } %>
+                    <span class="choose-check">&#10003;</span>
+                  </span>
+                  <span class="choose-name"><%= item.item_name %></span>
+                  <span class="choose-section"><%= item.section || 'Other' %></span>
+                </span>
+              </label>
+            <% }); %>
+          </div>
+
+          <button type="submit" class="btn btn-primary">Add selected items</button>
+        </form>
+      <% } %>
+    </details>
+
+  </main>
+
+  <script>
+    // Heart button: ask the server to toggle the favourite, then update the heart.
+    document.getElementById('heartBtn').addEventListener('click', function () {
+      var heart = this;
+      fetch('/outfits/' + heart.dataset.id + '/favorite', { method: 'POST' })
+        .then(function (response) {
+          if (!response.ok) throw new Error('failed');
+          return response.json();
+        })
+        .then(function (data) {
+          heart.classList.toggle('on', data.is_favorite);
+        })
+        .catch(function () {
+          alert('Could not update the favourite. Please try again.');
+        });
+    });
+
+    // Remove "?error=..." from the address bar, so a reload gives a clean page.
+    history.replaceState(null, '', '/outfits/<%= outfit.outfit_id %>');
+  </script>
+
+</body>
+</html>

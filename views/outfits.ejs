@@ -1,0 +1,175 @@
+<%#
+  outfits.ejs - the list of the user's outfits.
+
+  Your GET /outfits handler must pass:
+    user              -> { full_name }
+    outfits           -> array, each with: outfit_id, outfit_name, description, created_at,
+                         is_favorite, itemCount,
+                         items (array of { item_id, item_name, image_url }),
+                         occasions (array of occasion names, e.g. ['Casual', 'College'])
+    occasions         -> [ { occasion_id, occasion_name }, ... ]   (for the filter dropdown)
+    selectedOccasion  -> the chosen occasion_id as a number (0 = all)
+    search            -> text in the search box ('' if empty)
+    onlyFavorites     -> true / false
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Outfits - ClosetIQ</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/styles/app.css">
+  <link rel="stylesheet" href="/styles/outfits.css">
+</head>
+<body>
+
+  <%- include('partials/header', { active: 'outfits', user: user }) %>
+
+  <main class="page">
+
+    <div class="page-head">
+      <div>
+        <h1>My Outfits</h1>
+        <p class="count"><%= outfits.length %> <%= outfits.length === 1 ? 'outfit' : 'outfits' %></p>
+      </div>
+      <a href="/outfits/new" class="btn btn-primary">+ New outfit</a>
+    </div>
+
+    <!-- Filters: ticking or choosing something reloads the page with the filter applied -->
+    <form class="toolbar" action="/outfits" method="GET">
+      <div class="search-box">
+        <input type="search" name="search" placeholder="Search outfits..." value="<%= search %>">
+        <button type="submit" class="btn btn-primary btn-small">Search</button>
+      </div>
+
+      <select name="occasion" onchange="this.form.submit()">
+        <option value="0">All occasions</option>
+        <% occasions.forEach(function (occasion) { %>
+          <option value="<%= occasion.occasion_id %>"
+            <%= selectedOccasion === occasion.occasion_id ? 'selected' : '' %>><%= occasion.occasion_name %></option>
+        <% }); %>
+      </select>
+
+      <label class="fav-filter">
+        <input type="checkbox" name="favorites" value="1" <%= onlyFavorites ? 'checked' : '' %>
+               onchange="this.form.submit()">
+        <span>&#9829; Favourites only</span>
+      </label>
+
+      <% if (search || selectedOccasion || onlyFavorites) { %>
+        <a href="/outfits" class="clear-link">Clear filters</a>
+      <% } %>
+    </form>
+
+    <% if (outfits.length === 0) { %>
+
+      <div class="empty">
+        <% if (search || selectedOccasion || onlyFavorites) { %>
+          <h3>No outfits match your filters</h3>
+          <p>Try removing a filter or searching for something else.</p>
+          <a href="/outfits" class="btn btn-outline">Clear filters</a>
+        <% } else { %>
+          <h3>You haven't created any outfits yet</h3>
+          <p>Combine items from your wardrobe into your first look.</p>
+          <a href="/outfits/new" class="btn btn-primary">+ Create your first outfit</a>
+        <% } %>
+      </div>
+
+    <% } else { %>
+
+      <div class="grid">
+        <% outfits.forEach(function (outfit) { %>
+          <% const shown = outfit.items.slice(0, 4); %>
+
+          <article class="card">
+
+            <!-- Pictures of up to 4 items; "+N" on the last one when there are more -->
+            <div class="mosaic mosaic-<%= shown.length || 1 %>">
+              <% shown.forEach(function (item, index) { %>
+                <div class="thumb">
+                  <% if (item.image_url) { %>
+                    <img src="<%= item.image_url %>" alt="<%= item.item_name %>" loading="lazy">
+                  <% } else { %>
+                    <span class="thumb-letter"><%= item.item_name.charAt(0).toUpperCase() %></span>
+                  <% } %>
+                  <% if (index === 3 && outfit.itemCount > 4) { %>
+                    <span class="more">+<%= outfit.itemCount - 3 %></span>
+                  <% } %>
+                </div>
+              <% }); %>
+              <% if (shown.length === 0) { %>
+                <div class="thumb"><span class="thumb-letter">?</span></div>
+              <% } %>
+
+              <!-- Heart: toggles favourite without reloading (script at the bottom) -->
+              <button type="button" class="heart <%= outfit.is_favorite ? 'on' : '' %>"
+                      data-id="<%= outfit.outfit_id %>" aria-label="Toggle favourite">&#9829;</button>
+            </div>
+
+            <div class="card-body">
+              <h3><%= outfit.outfit_name %></h3>
+
+              <% if (outfit.description) { %>
+                <p class="description"><%= outfit.description %></p>
+              <% } %>
+
+              <% if (outfit.occasions.length > 0) { %>
+                <div class="chips">
+                  <% outfit.occasions.forEach(function (name) { %>
+                    <span class="chip"><%= name %></span>
+                  <% }); %>
+                </div>
+              <% } %>
+
+              <p class="meta">
+                <%= outfit.itemCount %> <%= outfit.itemCount === 1 ? 'item' : 'items' %>
+                <% if (outfit.created_at) { %>
+                  &bull; <%= new Date(outfit.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) %>
+                <% } %>
+              </p>
+            </div>
+
+            <div class="card-actions">
+              <a href="/outfits/<%= outfit.outfit_id %>" class="btn btn-small btn-outline">View</a>
+
+              <!-- Delete is a POST form; the browser asks first -->
+              <form action="/outfits/<%= outfit.outfit_id %>/delete" method="POST"
+                    onsubmit="return confirm('Delete this outfit? Its plans and wear history will be deleted too.');">
+                <button type="submit" class="btn btn-small btn-danger">Delete</button>
+              </form>
+            </div>
+
+          </article>
+        <% }); %>
+      </div>
+
+    <% } %>
+
+  </main>
+
+  <script>
+    // Heart button: ask the server to toggle the favourite, then update the heart.
+    document.querySelectorAll('.heart').forEach(function (heart) {
+      heart.addEventListener('click', function () {
+        fetch('/outfits/' + heart.dataset.id + '/favorite', { method: 'POST' })
+          .then(function (response) {
+            if (!response.ok) throw new Error('failed');
+            return response.json();
+          })
+          .then(function (data) {
+            heart.classList.toggle('on', data.is_favorite);
+          })
+          .catch(function () {
+            alert('Could not update the favourite. Please try again.');
+          });
+      });
+    });
+  </script>
+
+</body>
+</html>

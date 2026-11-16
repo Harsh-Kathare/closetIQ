@@ -1,0 +1,149 @@
+<%#
+  wear-log.ejs - record when you wore an outfit and how it felt.
+
+  Your GET /wear-log handler must pass:
+    user      -> { full_name }
+    outfits   -> [ { outfit_id, outfit_name }, ... ]
+    logs      -> newest first: [ { wear_log_id, outfit_id, outfit_name, worn_at ('YYYY-MM-DD'),
+                   feedback, colour_rating, size_rating, comfort_rating, style_rating, average } ]
+    stats     -> { total, average }   (average is a number or null)
+    today     -> 'YYYY-MM-DD'
+    error     -> text or null
+%>
+<%
+  var ratingFields = [
+    { name: 'colour_rating',  label: 'Colour' },
+    { name: 'size_rating',    label: 'Fit / size' },
+    { name: 'comfort_rating', label: 'Comfort' },
+    { name: 'style_rating',   label: 'Style' }
+  ];
+  function niceDate(d) {
+    return new Date(d + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+  }
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wear Log - ClosetIQ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles/app.css">
+  <link rel="stylesheet" href="/styles/wear-log.css">
+</head>
+<body>
+
+  <%- include('partials/header', { active: 'wear-log', user: user }) %>
+
+  <main class="log-page">
+
+    <h1>Wear Log</h1>
+    <p class="subtitle">Record what you wore and rate it. These ratings power your recommendations.</p>
+
+    <% if (error) { %><div class="error-box"><%= error %></div><% } %>
+
+    <div class="stats">
+      <div class="stat"><strong><%= stats.total %></strong><span>Times worn</span></div>
+      <div class="stat"><strong><%= stats.average === null ? '-' : stats.average.toFixed(1) %></strong><span>Average rating (out of 5)</span></div>
+    </div>
+
+    <div class="log-layout">
+
+      <!-- ============ Log form ============ -->
+      <section class="box form-box">
+        <h2>Log an outfit</h2>
+
+        <% if (outfits.length === 0) { %>
+          <p class="hint">You need an outfit first.</p>
+          <a href="/outfits/new" class="btn btn-primary">+ Create an outfit</a>
+        <% } else { %>
+          <!-- Submitting sends a POST request to /wear-log -->
+          <form action="/wear-log" method="POST">
+
+            <div class="field">
+              <label for="outfit_id">Outfit</label>
+              <select id="outfit_id" name="outfit_id" required>
+                <option value="">Choose an outfit</option>
+                <% outfits.forEach(function (o) { %>
+                  <option value="<%= o.outfit_id %>"><%= o.outfit_name %></option>
+                <% }); %>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="worn_at">Date worn</label>
+              <input type="date" id="worn_at" name="worn_at" max="<%= today %>" value="<%= today %>" required>
+            </div>
+
+            <% ratingFields.forEach(function (r) { %>
+              <div class="field">
+                <label><%= r.label %></label>
+                <div class="rating">
+                  <% for (var n = 1; n <= 5; n++) { %>
+                    <label class="pill">
+                      <input type="radio" name="<%= r.name %>" value="<%= n %>" required>
+                      <span><%= n %></span>
+                    </label>
+                  <% } %>
+                </div>
+              </div>
+            <% }); %>
+            <p class="hint small">1 = poor, 5 = excellent</p>
+
+            <div class="field">
+              <label for="feedback">Feedback (optional)</label>
+              <textarea id="feedback" name="feedback" rows="2" maxlength="500" placeholder="How did it feel?"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary full">Save to wear log</button>
+          </form>
+        <% } %>
+      </section>
+
+      <!-- ============ History ============ -->
+      <section class="history">
+        <h2>History</h2>
+
+        <% if (logs.length === 0) { %>
+          <div class="empty">
+            <h3>No wears logged yet</h3>
+            <p>Log your first outfit using the form.</p>
+          </div>
+        <% } %>
+
+        <% logs.forEach(function (log) { %>
+          <article class="log-card">
+            <div class="log-top">
+              <div>
+                <a href="/outfits/<%= log.outfit_id %>" class="log-name"><%= log.outfit_name %></a>
+                <p class="log-date"><%= niceDate(log.worn_at) %></p>
+              </div>
+              <div class="score"><%= log.average.toFixed(1) %><small>/5</small></div>
+            </div>
+
+            <div class="ratings">
+              <% ratingFields.forEach(function (r) { %>
+                <span><%= r.label %> <b><%= log[r.name] %></b></span>
+              <% }); %>
+            </div>
+
+            <% if (log.feedback) { %><p class="feedback">&ldquo;<%= log.feedback %>&rdquo;</p><% } %>
+
+            <form action="/wear-log/<%= log.wear_log_id %>/delete" method="POST"
+                  onsubmit="return confirm('Delete this log entry?');">
+              <button type="submit" class="link-btn">Delete</button>
+            </form>
+          </article>
+        <% }); %>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    // Remove "?error=..." from the address bar, so a reload gives a clean page.
+    history.replaceState(null, '', '/wear-log');
+  </script>
+</body>
+</html>

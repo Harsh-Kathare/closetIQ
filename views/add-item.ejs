@@ -1,0 +1,194 @@
+<%#
+  add-item.ejs - ONE form used for both adding and editing a clothing item.
+
+  Your handlers must pass:
+    user      -> { full_name }
+    sections  -> [ { category_id, category_name }, ... ]   (Clothing, Footwear, ...)
+    section   -> name of the chosen section, e.g. 'Clothing'
+    filters   -> [ { id, name, values: [ { category_id, category_name } ] }, ... ]
+    brands    -> [ { brand_id, brand_name }, ... ]
+    error     -> text of an error message, or null
+  Only when EDITING, also pass:
+    item        -> the item's row: item_id, brand_id, item_name, size,
+                   purchase_date (as 'YYYY-MM-DD'), purchase_price,
+                   availability_status, notes
+    selectedIds -> array of category_ids the item already has, e.g. [1, 6]
+  When adding, leave item and selectedIds out: the form is empty.
+%>
+<% const editing = typeof item !== 'undefined' && item; %>
+<% const picked = typeof selectedIds !== 'undefined' ? selectedIds : []; %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= editing ? 'Edit item' : 'Add item' %> - ClosetIQ</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/styles/app.css">
+  <link rel="stylesheet" href="/styles/add-item.css">
+</head>
+<body>
+
+  <%- include('partials/header', { active: 'wardrobe', user: user }) %>
+
+  <main class="form-page">
+
+    <a href="/wardrobe?section=<%= encodeURIComponent(section) %>" class="back-link">&larr; Back to wardrobe</a>
+
+    <% if (editing) { %>
+      <h1>Edit item</h1>
+      <p class="subtitle">Change anything you like, then save.</p>
+      <!-- an existing item keeps its section, so there are no tabs here -->
+      <p class="section-label">Section: <strong><%= section %></strong></p>
+    <% } else { %>
+      <h1>Add a new item</h1>
+      <p class="subtitle">Pick a section first, then fill in the details.</p>
+
+      <!-- Step 1: the section. Clicking reloads this page with that section's dropdowns. -->
+      <nav class="section-tabs">
+        <% sections.forEach(function (s) { %>
+          <a href="/items/new?section=<%= encodeURIComponent(s.category_name) %>"
+             class="<%= s.category_name === section ? 'active' : '' %>"><%= s.category_name %></a>
+        <% }); %>
+      </nav>
+    <% } %>
+
+    <% if (error) { %>
+      <div class="error-box"><%= error %></div>
+    <% } %>
+
+    <!-- Adding sends a POST to /items. Editing sends a POST to /items/<id>/edit -->
+    <form action="<%= editing ? '/items/' + item.item_id + '/edit' : '/items' %>" method="POST">
+      <input type="hidden" name="section" value="<%= section %>">
+
+      <!-- ============ Basic details ============ -->
+      <div class="form-card">
+        <h2>Basic details</h2>
+
+        <div class="form-grid">
+
+          <div class="field full">
+            <label for="item_name">Item name</label>
+            <input type="text" id="item_name" name="item_name" maxlength="100"
+                   placeholder="e.g. Blue Denim Jacket"
+                   value="<%= editing ? item.item_name : '' %>" required <%= editing ? '' : 'autofocus' %>>
+          </div>
+
+          <div class="field">
+            <label for="brand_id">Brand</label>
+            <select id="brand_id" name="brand_id" data-new="newBrandBox">
+              <option value="">No brand</option>
+              <% brands.forEach(function (brand) { %>
+                <option value="<%= brand.brand_id %>"
+                  <%= editing && item.brand_id === brand.brand_id ? 'selected' : '' %>><%= brand.brand_name %></option>
+              <% }); %>
+              <option value="__new__">+ Add a new brand...</option>
+            </select>
+            <!-- shown only when "+ Add a new brand..." is chosen (see the script at the bottom) -->
+            <div class="new-value" id="newBrandBox" hidden>
+              <input type="text" name="new_brand" maxlength="50" placeholder="Type the brand name">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="size">Size</label>
+            <input type="text" id="size" name="size" maxlength="20" placeholder="e.g. M, L, 32, UK 9"
+                   value="<%= editing && item.size ? item.size : '' %>">
+          </div>
+
+          <div class="field">
+            <label for="purchase_price">Price (&#8377;)</label>
+            <input type="number" id="purchase_price" name="purchase_price" min="0" step="0.01" placeholder="e.g. 2499"
+                   value="<%= editing && item.purchase_price != null ? item.purchase_price : '' %>">
+          </div>
+
+          <div class="field">
+            <label for="purchase_date">Purchase date</label>
+            <input type="date" id="purchase_date" name="purchase_date"
+                   value="<%= editing && item.purchase_date ? item.purchase_date : '' %>">
+          </div>
+
+          <div class="field">
+            <label for="availability_status">Availability</label>
+            <select id="availability_status" name="availability_status">
+              <% ['Available', 'In Laundry', 'Unavailable'].forEach(function (status) { %>
+                <option value="<%= status %>"
+                  <%= editing && item.availability_status === status ? 'selected' : '' %>><%= status %></option>
+              <% }); %>
+            </select>
+          </div>
+
+          <div class="field full">
+            <label for="notes">Notes (optional)</label>
+            <textarea id="notes" name="notes" rows="3"
+                      placeholder="Anything worth remembering about this item"><%= editing && item.notes ? item.notes : '' %></textarea>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ============ Category dropdowns (from the Categories table) ============ -->
+      <div class="form-card">
+        <h2>Describe it</h2>
+        <p class="hint">The first one is required. Can't find the right option? Pick "+ Add new..." at the bottom of the list and type your own.</p>
+
+        <% if (filters.length === 0) { %>
+          <p class="hint">No categories exist for <%= section %> yet.</p>
+        <% } %>
+
+        <div class="form-grid">
+          <% filters.forEach(function (group, index) { %>
+            <div class="field">
+              <label for="group_<%= group.id %>"><%= group.name %></label>
+              <!-- named group_<id>, so the server knows which dropdown each choice came from -->
+              <select id="group_<%= group.id %>" name="group_<%= group.id %>"
+                      data-new="newBox_<%= group.id %>" <%= index === 0 ? 'required' : '' %>>
+                <option value="">Select <%= group.name.toLowerCase() %></option>
+                <% group.values.forEach(function (value) { %>
+                  <option value="<%= value.category_id %>"
+                    <%= picked.includes(value.category_id) ? 'selected' : '' %>><%= value.category_name %></option>
+                <% }); %>
+                <option value="__new__">+ Add new <%= group.name.toLowerCase() %>...</option>
+              </select>
+              <div class="new-value" id="newBox_<%= group.id %>" hidden>
+                <input type="text" name="new_<%= group.id %>" maxlength="50"
+                       placeholder="Type a new <%= group.name.toLowerCase() %>">
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <a href="/wardrobe?section=<%= encodeURIComponent(section) %>" class="btn btn-outline">Cancel</a>
+        <button type="submit" class="btn btn-primary"><%= editing ? 'Save changes' : 'Save item' %></button>
+      </div>
+
+    </form>
+  </main>
+
+  <script>
+    // "+ Add new..." support: when that option is chosen, show the text box
+    // under the dropdown and make it required. Otherwise hide it again.
+    document.querySelectorAll('select[data-new]').forEach(function (select) {
+      var box = document.getElementById(select.dataset.new);
+      var input = box.querySelector('input');
+
+      function update() {
+        var adding = select.value === '__new__';
+        box.hidden = !adding;
+        input.required = adding;
+        if (adding) input.focus();
+      }
+
+      select.addEventListener('change', update);
+      update();
+    });
+  </script>
+
+</body>
+</html>

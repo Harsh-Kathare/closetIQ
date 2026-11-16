@@ -1,0 +1,113 @@
+/* profile.css - styles only for the profile page (profile.ejs).
+   Colours, buttons and the header come from app.css. */
+
+.profile-page {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 28px 24px 64px;
+}
+
+.profile-page h1 {
+  margin-bottom: 22px;
+  font-size: 32px;
+  letter-spacing: -1px;
+  line-height: 1.2;
+}
+
+.box {
+  margin-bottom: 22px;
+  padding: 22px 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.box h2 {
+  margin-bottom: 12px;
+  font-size: 18px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 15px;
+}
+
+.row:last-child { border-bottom: none; }
+.row span { color: var(--muted); }
+
+.hint {
+  margin-bottom: 18px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.ok-box,
+.error-box {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.ok-box {
+  background: var(--accent-soft);
+  border: 1px solid #c9dbd1;
+  color: var(--accent);
+}
+
+.error-box {
+  background: var(--danger-soft);
+  border: 1px solid #f0c9c5;
+  color: var(--danger);
+}
+
+/* ---------------- Sliders ---------------- */
+.slider-row {
+  display: grid;
+  grid-template-columns: 170px 1fr 28px;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.slider-text label {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.slider-text small {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.slider-row input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.slider-row output {
+  font-size: 18px;
+  font-weight: 800;
+  text-align: center;
+  color: var(--accent);
+}
+
+.buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+@media (max-width: 560px) {
+  .profile-page { padding: 24px 16px 48px; }
+  .slider-row { grid-template-columns: 1fr 28px; }
+  .slider-text { grid-column: 1 / -1; }
+  .buttons { flex-direction: column; }
+}

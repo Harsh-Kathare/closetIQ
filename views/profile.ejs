@@ -1,0 +1,98 @@
+<%#
+  profile.ejs - your account and what matters to you when rating outfits.
+
+  Your GET /profile handler must pass:
+    user     -> { full_name }
+    email    -> text
+    weights  -> { colour, size, comfort, style }   (each 1 to 5)
+    saved    -> true after a successful save
+    error    -> text or null
+%>
+<%
+  var fields = [
+    { name: 'weight_colour',  label: 'Colour',      hint: 'How much the colours of the outfit matter',  value: weights.colour },
+    { name: 'weight_size',    label: 'Fit / size',  hint: 'How much the fit of the clothes matters',     value: weights.size },
+    { name: 'weight_comfort', label: 'Comfort',     hint: 'How much comfort matters',                    value: weights.comfort },
+    { name: 'weight_style',   label: 'Style',       hint: 'How much the overall style matters',          value: weights.style }
+  ];
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile - ClosetIQ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles/app.css">
+  <link rel="stylesheet" href="/styles/profile.css">
+</head>
+<body>
+
+  <%- include('partials/header', { active: 'profile', user: user }) %>
+
+  <main class="profile-page">
+
+    <h1>Your profile</h1>
+
+    <section class="box">
+      <h2>Account</h2>
+      <p class="row"><span>Name</span><strong><%= user.full_name %></strong></p>
+      <p class="row"><span>Email</span><strong><%= email %></strong></p>
+    </section>
+
+    <section class="box">
+      <h2>Rating priorities</h2>
+      <p class="hint">
+        When you rate an outfit you give four ratings. Choose how much each one matters to you
+        (1 = matters a little, 5 = matters a lot). Your recommendations use these priorities.
+        Leave them all equal if everything matters the same.
+      </p>
+
+      <% if (saved) { %><div class="ok-box">Your priorities were saved.</div><% } %>
+      <% if (error) { %><div class="error-box"><%= error %></div><% } %>
+
+      <!-- Submitting sends a POST request to /profile/preferences -->
+      <form action="/profile/preferences" method="POST" id="prefForm">
+        <% fields.forEach(function (f) { %>
+          <div class="slider-row">
+            <div class="slider-text">
+              <label for="<%= f.name %>"><%= f.label %></label>
+              <small><%= f.hint %></small>
+            </div>
+            <input type="range" id="<%= f.name %>" name="<%= f.name %>" min="1" max="5" step="1" value="<%= f.value %>">
+            <output for="<%= f.name %>"><%= f.value %></output>
+          </div>
+        <% }); %>
+
+        <div class="buttons">
+          <button type="submit" class="btn btn-primary">Save priorities</button>
+          <button type="button" class="btn btn-outline" id="resetBtn">Make all equal</button>
+        </div>
+      </form>
+    </section>
+
+  </main>
+
+  <script>
+    // Show the number next to each slider while it moves
+    document.querySelectorAll('.slider-row').forEach(function (row) {
+      var slider = row.querySelector('input');
+      var output = row.querySelector('output');
+      slider.addEventListener('input', function () { output.textContent = slider.value; });
+    });
+
+    // "Make all equal" sets every slider back to 1 (you still press Save)
+    document.getElementById('resetBtn').addEventListener('click', function () {
+      document.querySelectorAll('.slider-row').forEach(function (row) {
+        row.querySelector('input').value = 1;
+        row.querySelector('output').textContent = 1;
+      });
+    });
+
+    // Remove "?saved=1" / "?error=..." from the address bar, so a reload gives a clean page.
+    history.replaceState(null, '', '/profile');
+  </script>
+</body>
+</html>

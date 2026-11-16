@@ -1,0 +1,357 @@
+<%#
+  planner.ejs - the outfit planner: calendar + "plan an outfit" form + list of plans.
+
+  Your GET /planner handler must pass:
+    user          -> { full_name }
+    outfits       -> the user's outfits: [ { outfit_id, outfit_name, occasionIds: [1, 2] }, ... ]
+    occasions     -> [ { occasion_id, occasion_name }, ... ]
+    groups        -> upcoming plans grouped by date: [ { date: '2026-11-20', plans: [ plan, ... ] }, ... ]
+    past          -> older plans (newest first), array of plans
+                     A plan has: plan_id, outfit_id, outfit_name, occasion_id, occasion_name,
+                     planned_date ('YYYY-MM-DD'), notes, items (up to 3 of { item_name, image_url })
+    calendarData  -> how many plans are on each day: { '2026-11-20': 2, ... }
+    today         -> today as 'YYYY-MM-DD'
+    tomorrow      -> tomorrow as 'YYYY-MM-DD'
+    error         -> text of an error message, or null
+%>
+<%
+  // "Today", "Tomorrow" or "Friday, 20 Nov"
+  function dayLabel(dateStr) {
+    if (dateStr === today) return 'Today';
+    if (dateStr === tomorrow) return 'Tomorrow';
+    return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' });
+  }
+  function shortDate(dateStr) {
+    return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+  const upcomingCount = groups.reduce(function (sum, g) { return sum + g.plans.length; }, 0);
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outfit Planner - ClosetIQ</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/styles/app.css">
+  <link rel="stylesheet" href="/styles/planner.css">
+</head>
+<body>
+
+  <%- include('partials/header', { active: 'planner', user: user }) %>
+
+  <main class="planner-page">
+
+    <div class="page-head">
+      <h1>Outfit Planner</h1>
+      <p class="subtitle">Decide what to wear ahead of time. Pick a day on the calendar, then plan an outfit for it.</p>
+    </div>
+
+    <% if (error) { %>
+      <div class="error-box"><%= error %></div>
+    <% } %>
+
+    <div class="planner-layout">
+
+      <!-- ============ LEFT: calendar + form ============ -->
+      <aside class="side">
+
+        <section class="box calendar">
+          <div class="cal-head">
+            <button type="button" class="cal-nav" id="calPrev" aria-label="Previous month">&lsaquo;</button>
+            <strong id="calTitle"></strong>
+            <button type="button" class="cal-nav" id="calNext" aria-label="Next month">&rsaquo;</button>
+          </div>
+          <div class="cal-week">
+            <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
+          <p class="cal-legend"><span class="dot"></span> a day with a planned outfit</p>
+        </section>
+
+        <section class="box">
+          <h2>Plan an outfit</h2>
+
+          <% if (outfits.length === 0) { %>
+            <p class="hint">You need an outfit before you can plan one.</p>
+            <a href="/outfits/new" class="btn btn-primary">+ Create an outfit</a>
+          <% } else { %>
+
+            <!-- Submitting sends a POST request to /planner -->
+            <form action="/planner" method="POST" id="planForm">
+
+              <div class="field">
+                <label for="outfit_id">Outfit</label>
+                <select id="outfit_id" name="outfit_id" required>
+                  <option value="">Choose an outfit</option>
+                  <% outfits.forEach(function (outfit) { %>
+                    <option value="<%= outfit.outfit_id %>" data-occasions="<%= outfit.occasionIds.join(',') %>"><%= outfit.outfit_name %></option>
+                  <% }); %>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="occasion_id">Occasion</label>
+                <select id="occasion_id" name="occasion_id" required data-new="newOccasionBox">
+                  <option value="">Choose an occasion</option>
+                  <% occasions.forEach(function (occasion) { %>
+                    <option value="<%= occasion.occasion_id %>"><%= occasion.occasion_name %></option>
+                  <% }); %>
+                  <option value="__new__">+ Add a new occasion...</option>
+                </select>
+                <div class="new-value" id="newOccasionBox" hidden>
+                  <input type="text" name="new_occasion" maxlength="50" placeholder="Type the occasion">
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="plan_date">Date</label>
+                <input type="date" id="plan_date" name="plan_date" min="<%= today %>" value="<%= today %>" required>
+              </div>
+
+              <div class="field">
+                <label for="notes">Notes (optional)</label>
+                <textarea id="notes" name="notes" rows="2" placeholder="e.g. Presentation at 10am"></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-primary full">Add to planner</button>
+            </form>
+
+          <% } %>
+        </section>
+
+      </aside>
+
+      <!-- ============ RIGHT: the plans ============ -->
+      <section class="plans">
+
+        <h2 class="plans-title">Upcoming <span class="count-badge"><%= upcomingCount %></span></h2>
+
+        <% if (groups.length === 0) { %>
+          <div class="empty">
+            <h3>Nothing planned yet</h3>
+            <p>Pick a day on the calendar and plan your first outfit.</p>
+          </div>
+        <% } %>
+
+        <% groups.forEach(function (group) { %>
+          <div class="day-group" id="d-<%= group.date %>">
+            <h3 class="day-title"><%= dayLabel(group.date) %>
+              <% if (group.date !== today && group.date !== tomorrow) { %><% } else { %>
+                <small><%= shortDate(group.date) %></small>
+              <% } %>
+            </h3>
+
+            <% group.plans.forEach(function (plan) { %>
+              <article class="plan-card">
+
+                <div class="plan-top">
+                  <div class="thumbs">
+                    <% plan.items.forEach(function (item) { %>
+                      <span class="thumb">
+                        <% if (item.image_url) { %>
+                          <img src="<%= item.image_url %>" alt="<%= item.item_name %>" loading="lazy">
+                        <% } else { %>
+                          <%= item.item_name.charAt(0).toUpperCase() %>
+                        <% } %>
+                      </span>
+                    <% }); %>
+                  </div>
+
+                  <div class="plan-main">
+                    <a href="/outfits/<%= plan.outfit_id %>" class="plan-name"><%= plan.outfit_name %></a>
+                    <% if (plan.occasion_name) { %>
+                      <span class="chip"><%= plan.occasion_name %></span>
+                    <% } %>
+                    <% if (plan.notes) { %>
+                      <p class="plan-notes"><%= plan.notes %></p>
+                    <% } %>
+                  </div>
+
+                  <div class="plan-actions">
+                    <button type="button" class="btn btn-small btn-outline" data-edit="<%= plan.plan_id %>">Edit</button>
+                    <form action="/planner/<%= plan.plan_id %>/delete" method="POST"
+                          onsubmit="return confirm('Remove this plan? The outfit itself is not deleted.');">
+                      <button type="submit" class="btn btn-small btn-danger">Remove</button>
+                    </form>
+                  </div>
+                </div>
+
+                <!-- Edit form: hidden until the Edit button is pressed -->
+                <form action="/planner/<%= plan.plan_id %>/edit" method="POST" class="edit-plan"
+                      id="edit-<%= plan.plan_id %>" hidden>
+                  <div class="edit-grid">
+                    <div class="field">
+                      <label>Occasion</label>
+                      <select name="occasion_id" required>
+                        <% occasions.forEach(function (occasion) { %>
+                          <option value="<%= occasion.occasion_id %>"
+                            <%= plan.occasion_id === occasion.occasion_id ? 'selected' : '' %>><%= occasion.occasion_name %></option>
+                        <% }); %>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label>Date</label>
+                      <input type="date" name="plan_date" min="<%= today %>" value="<%= plan.planned_date %>" required>
+                    </div>
+                    <div class="field wide">
+                      <label>Notes</label>
+                      <textarea name="notes" rows="2"><%= plan.notes || '' %></textarea>
+                    </div>
+                  </div>
+                  <button type="submit" class="btn btn-small btn-primary">Save changes</button>
+                </form>
+
+              </article>
+            <% }); %>
+          </div>
+        <% }); %>
+
+        <!-- ============ Past plans ============ -->
+        <% if (past.length > 0) { %>
+          <details class="past">
+            <summary>Past plans (<%= past.length %>)</summary>
+            <% past.forEach(function (plan) { %>
+              <div class="past-row">
+                <span class="past-date"><%= shortDate(plan.planned_date) %></span>
+                <a href="/outfits/<%= plan.outfit_id %>" class="past-name"><%= plan.outfit_name %></a>
+                <% if (plan.occasion_name) { %><span class="chip"><%= plan.occasion_name %></span><% } %>
+                <form action="/planner/<%= plan.plan_id %>/delete" method="POST"
+                      onsubmit="return confirm('Remove this plan?');">
+                  <button type="submit" class="link-btn">Remove</button>
+                </form>
+              </div>
+            <% }); %>
+          </details>
+        <% } %>
+
+      </section>
+    </div>
+  </main>
+
+  <script>
+    // ---------- Calendar ----------
+    // planCounts = how many plans each day has, e.g. { '2026-11-20': 2 }
+    var planCounts = <%- JSON.stringify(calendarData) %>;
+    var today = '<%= today %>';
+
+    var calGrid = document.getElementById('calGrid');
+    var calTitle = document.getElementById('calTitle');
+    var dateInput = document.getElementById('plan_date');   // null when there are no outfits yet
+
+    var parts = today.split('-');
+    var viewYear = Number(parts[0]);
+    var viewMonth = Number(parts[1]) - 1;       // 0 = January
+    var selectedDate = dateInput ? dateInput.value : '';
+
+    function pad(n) { return (n < 10 ? '0' : '') + n; }
+
+    function drawCalendar() {
+      calGrid.innerHTML = '';
+      calTitle.textContent = new Date(viewYear, viewMonth, 1)
+        .toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+
+      var firstWeekday = new Date(viewYear, viewMonth, 1).getDay();      // 0 = Sunday
+      var daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+      for (var i = 0; i < firstWeekday; i++) {
+        calGrid.appendChild(document.createElement('span'));             // empty cells
+      }
+
+      for (var day = 1; day <= daysInMonth; day++) {
+        var dateStr = viewYear + '-' + pad(viewMonth + 1) + '-' + pad(day);
+        var cell = document.createElement('button');
+        cell.type = 'button';
+        cell.className = 'cal-day';
+        cell.textContent = day;
+        cell.dataset.date = dateStr;
+
+        if (dateStr === today) cell.classList.add('today');
+        if (dateStr === selectedDate) cell.classList.add('selected');
+        if (planCounts[dateStr]) cell.classList.add('has-plan');
+        if (dateStr < today) cell.disabled = true;                       // can't plan the past
+
+        cell.addEventListener('click', function () { pickDay(this.dataset.date); });
+        calGrid.appendChild(cell);
+      }
+    }
+
+    // clicking a day: fill the date field, and jump to that day's plans if there are any
+    function pickDay(dateStr) {
+      selectedDate = dateStr;
+      if (dateInput) dateInput.value = dateStr;
+      drawCalendar();
+
+      var group = document.getElementById('d-' + dateStr);
+      if (group) {
+        group.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        group.classList.add('flash');
+        setTimeout(function () { group.classList.remove('flash'); }, 1400);
+      }
+    }
+
+    document.getElementById('calPrev').addEventListener('click', function () {
+      viewMonth--;
+      if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+      drawCalendar();
+    });
+    document.getElementById('calNext').addEventListener('click', function () {
+      viewMonth++;
+      if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+      drawCalendar();
+    });
+
+    if (dateInput) {
+      dateInput.addEventListener('change', function () {
+        selectedDate = dateInput.value;
+        drawCalendar();
+      });
+    }
+    drawCalendar();
+
+    // ---------- Form helpers ----------
+    // When an outfit is chosen, pre-select its first occasion (if none is chosen yet)
+    var outfitSelect = document.getElementById('outfit_id');
+    var occasionSelect = document.getElementById('occasion_id');
+    if (outfitSelect) {
+      outfitSelect.addEventListener('change', function () {
+        var option = outfitSelect.options[outfitSelect.selectedIndex];
+        var first = (option.dataset.occasions || '').split(',')[0];
+        if (first && occasionSelect.value === '') {
+          occasionSelect.value = first;
+        }
+      });
+    }
+
+    // "+ Add a new occasion..." shows a text box
+    var newBox = document.getElementById('newOccasionBox');
+    if (occasionSelect && newBox) {
+      var newInput = newBox.querySelector('input');
+      function updateNew() {
+        var adding = occasionSelect.value === '__new__';
+        newBox.hidden = !adding;
+        newInput.required = adding;
+        if (adding) newInput.focus();
+      }
+      occasionSelect.addEventListener('change', updateNew);
+      updateNew();
+    }
+
+    // Edit buttons show/hide that plan's edit form
+    document.querySelectorAll('[data-edit]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        var form = document.getElementById('edit-' + button.dataset.edit);
+        form.hidden = !form.hidden;
+      });
+    });
+
+    // Remove "?error=..." from the address bar, so a reload gives a clean page.
+    history.replaceState(null, '', '/planner');
+  </script>
+
+</body>
+</html>

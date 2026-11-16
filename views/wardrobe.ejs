@@ -1,0 +1,189 @@
+<%#
+  wardrobe.ejs - the user's wardrobe.
+
+  Your GET /wardrobe handler must pass these 5 things:
+    user      -> { full_name }                       (for the header)
+    items     -> array of items, each one with:
+                   item_id, item_name, brand_name, size, purchase_price,
+                   availability_status, image_url,
+                   tags  (array of text, e.g. ['Blue', 'Jacket', 'Winter'])
+    filters   -> array of groups, e.g.
+                   [ { name: 'Type', values: [ { category_id: 5, category_name: 'T-Shirt' }, ... ] }, ... ]
+    selected  -> array of NUMBERS: the category_ids that are ticked, e.g. [5, 9]
+    search    -> text in the search box ('' if empty)
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Wardrobe - ClosetIQ</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/styles/app.css">
+  <link rel="stylesheet" href="/styles/wardrobe.css">
+</head>
+<body>
+
+  <%- include('partials/header', { active: 'wardrobe', user: user }) %>
+
+  <main class="page">
+
+    <!-- Title + Add button -->
+    <div class="page-head">
+      <div>
+        <h1>My Wardrobe</h1>
+        <p class="count"><%= items.length %> <%= items.length === 1 ? 'item' : 'items' %></p>
+      </div>
+      <a href="/items/new?section=<%= encodeURIComponent(section) %>" class="btn btn-primary">+ Add item</a>
+    </div>
+
+    <!-- Search box. The form="filterForm" part connects it to the filter form
+         below, so searching and filtering are ONE request: /wardrobe?search=...&category=5&category=9 -->
+    <nav class="section-tabs">
+      <% sections.forEach(function (s) { %>
+        <a href="/wardrobe?section=<%= encodeURIComponent(s.category_name) %>"
+          class="<%= s.category_name === section ? 'active' : '' %>"><%= s.category_name %></a>
+      <% }); %>
+    </nav>
+    <div class="search-box">
+      <input
+        type="search"
+        name="search"
+        form="filterForm"
+        placeholder="Search by item name or brand..."
+        value="<%= search %>"
+      >
+      <button type="submit" form="filterForm" class="btn btn-primary btn-small">Search</button>
+    </div>
+
+    <div class="layout">
+
+      <!-- ============ LEFT: filters (built from the Categories table) ============ -->
+      <aside class="sidebar">
+        <form id="filterForm" action="/wardrobe" method="GET">
+          <input type="hidden" name="section" value="<%= section %>">
+          <div class="sidebar-head">
+            <h2>Filters</h2>
+            <% if (selected.length > 0 || search) { %>
+              <a href="/wardrobe?section=<%= encodeURIComponent(section) %>" class="clear-link">Clear all</a>
+            <% } %>
+          </div>
+
+          <% if (filters.length === 0) { %>
+            <p class="muted-text">No filters available yet.</p>
+          <% } %>
+
+          <% filters.forEach(function (group) { %>
+            <details class="filter-group" open>
+              <summary><%= group.name %></summary>
+              <% group.values.forEach(function (value) { %>
+                <label class="check">
+                  <input
+                    type="checkbox"
+                    name="category"
+                    value="<%= value.category_id %>"
+                    <%= selected.includes(value.category_id) ? 'checked' : '' %>
+                    onchange="this.form.submit()"
+                  >
+                  <span><%= value.category_name %></span>
+                </label>
+              <% }); %>
+            </details>
+          <% }); %>
+
+        </form>
+      </aside>
+
+      <!-- ============ RIGHT: item cards ============ -->
+      <section class="results">
+
+        <% if (items.length === 0) { %>
+
+          <div class="empty">
+            <% if (selected.length > 0 || search) { %>
+              <h3>No items match your search</h3>
+              <p>Try removing a filter or searching for something else.</p>
+              <a href="/wardrobe?section=<%= encodeURIComponent(section) %>" class="btn btn-outline">Clear filters</a>
+            <% } else { %>
+              <h3>Your wardrobe is empty</h3>
+              <p>Add your first clothing item to get started.</p>
+              <a href="/items/new" class="btn btn-primary">+ Add item</a>
+            <% } %>
+          </div>
+
+        <% } else { %>
+
+          <div class="grid">
+            <% items.forEach(function (item) { %>
+              <% const isAvailable = item.availability_status === 'Available'; %>
+
+              <article class="card">
+
+                <div class="card-image">
+                  <% if (item.image_url) { %>
+                    <img src="<%= item.image_url %>" alt="<%= item.item_name %>" loading="lazy">
+                  <% } else { %>
+                    <!-- no photo: show the first letter of the name instead -->
+                    <div class="no-image"><%= item.item_name.charAt(0).toUpperCase() %></div>
+                  <% } %>
+                  <span class="status <%= isAvailable ? 'status-ok' : 'status-off' %>">
+                    <%= item.availability_status %>
+                  </span>
+                </div>
+
+                <div class="card-body">
+                  <h3><%= item.item_name %></h3>
+                  <p class="brand"><%= item.brand_name || 'No brand' %></p>
+
+                  <div class="tags">
+                    <% (item.tags || []).forEach(function (tag) { %>
+                      <span class="tag"><%= tag %></span>
+                    <% }); %>
+                  </div>
+
+                  <div class="meta">
+                    <span>Size: <%= item.size || '-' %></span>
+                    <span class="price">
+                      <%= item.purchase_price != null ? '₹' + Math.round(Number(item.purchase_price)).toLocaleString('en-IN') : '' %>
+                    </span>
+                  </div>
+                </div>
+
+                <div class="card-actions">
+                  <a href="/outfits/new?item=<%= item.item_id %>" class="btn btn-small btn-primary add-to-outfit">Add to Outfit</a>
+                  <a href="/items/<%= item.item_id %>/edit" class="btn btn-small btn-outline">Edit</a>
+
+                  <!-- Delete is a POST form (never a plain link). The browser asks first. -->
+                  <form action="/items/<%= item.item_id %>/delete" method="POST"
+                        onsubmit="return confirm('Are you sure you want to delete this item?');">
+                    <button type="submit" class="btn btn-small btn-danger">Delete</button>
+                  </form>
+                </div>
+
+              </article>
+            <% }); %>
+          </div>
+
+        <% } %>
+
+      </section>
+    </div>
+
+  </main>
+
+  <script>
+    // On phones, start with the filter groups folded so the items are easy to reach.
+    // A group that has a ticked box stays open so the user can see what is applied.
+    if (window.innerWidth < 900) {
+      document.querySelectorAll('.filter-group').forEach(function (group) {
+        if (!group.querySelector('input:checked')) group.open = false;
+      });
+    }
+  </script>
+
+</body>
+</html>

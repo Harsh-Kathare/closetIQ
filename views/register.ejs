@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register - ClosetIQ</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/styles/register.css">
+</head>
+<body>
+
+  <div class="login-layout">
+
+    <!-- LEFT: brand panel (hidden on small screens) -->
+    <aside class="brand-panel">
+      <a href="/" class="logo">Closet<span>IQ</span></a>
+
+      <div class="brand-text">
+        <h2>Your wardrobe, organised in minutes.</h2>
+        <p>Create a free account and start adding the clothes you own.</p>
+      </div>
+
+      <ul class="brand-points">
+        <li>Add items with photos, colours and seasons</li>
+        <li>Combine them into outfits</li>
+        <li>Plan ahead and rate what you wear</li>
+      </ul>
+    </aside>
+
+    <!-- RIGHT: the register form -->
+    <main class="form-panel">
+      <div class="form-box">
+
+        <a href="/" class="logo logo-mobile">Closet<span>IQ</span></a>
+
+        <h1>Create your account</h1>
+        <p class="subtitle">It only takes a few seconds.</p>
+
+        <!-- Your POST /register handler can send an error like this:
+             res.render('register', { error: 'This email is already registered.',
+                                      full_name: req.body.full_name, email: req.body.email })
+             If you render the page without an error, this box is simply not shown. -->
+        <% if (typeof error !== 'undefined' && error) { %>
+          <div class="error-box">
+            <%= error %>
+            <% if (typeof userExists !== 'undefined' && userExists) { %>
+              <a href="/login" class="error-link">Log in instead &rarr;</a>
+            <% } %>
+          </div>
+        <% } %>
+
+        <!-- Submitting sends a POST request to /register with the fields
+             "full_name", "email" and "password" -->
+        <form action="/register" method="POST">
+
+          <div class="field">
+            <label for="full_name">Full name</label>
+            <input
+              type="text"
+              id="full_name"
+              name="full_name"
+              placeholder="Your name"
+              value="<%= typeof full_name !== 'undefined' ? full_name : '' %>"
+              autocomplete="name"
+              maxlength="100"
+              required
+              autofocus
+            >
+          </div>
+
+          <div class="field">
+            <label for="email">Email</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              placeholder="you@example.com"
+              value="<%= typeof email !== 'undefined' ? email : '' %>"
+              autocomplete="email"
+              required
+            >
+          </div>
+
+          <div class="field">
+            <label for="password">Password</label>
+            <div class="password-wrap">
+              <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Create a password"
+                autocomplete="new-password"
+                minlength="6"
+                required
+              >
+              <button type="button" class="toggle-password" id="togglePassword">Show</button>
+            </div>
+            <p class="hint">At least 6 characters.</p>
+          </div>
+
+          <button type="submit" class="btn-submit">Create account</button>
+        </form>
+
+        <p class="switch-text">Already have an account? <a href="/login">Log in</a></p>
+        <a href="/" class="back-link">&larr; Back to home</a>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Tiny script: the Show/Hide button next to the password -->
+  <script>
+    var passwordInput = document.getElementById('password');
+    var toggleButton = document.getElementById('togglePassword');
+
+    toggleButton.addEventListener('click', function () {
+      var isHidden = passwordInput.type === 'password';
+      passwordInput.type = isHidden ? 'text' : 'password';
+      toggleButton.textContent = isHidden ? 'Hide' : 'Show';
+    });
+  </script>
+  <script>
+    history.replaceState(null, '', '/register');
+  </script>
+
+</body>
+</html>

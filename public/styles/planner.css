@@ -1,0 +1,492 @@
+/* planner.css - styles only for the outfit planner (planner.ejs).
+   Colours, buttons and the header come from app.css. */
+
+[hidden] {
+  display: none !important;
+}
+
+.planner-page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px 24px 64px;
+}
+
+.page-head h1 {
+  font-size: 32px;
+  letter-spacing: -1px;
+  line-height: 1.2;
+}
+
+.subtitle {
+  margin-bottom: 24px;
+  color: var(--muted);
+}
+
+.error-box {
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  background: var(--danger-soft);
+  border: 1px solid #f0c9c5;
+  border-radius: 10px;
+  color: var(--danger);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* ---------------- Two columns ---------------- */
+.planner-layout {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+.side {
+  position: sticky;
+  top: 84px;
+  max-height: calc(100vh - 104px);  /* scrolls on its own if the screen is short */
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.box {
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.box h2 {
+  margin-bottom: 14px;
+  font-size: 18px;
+}
+
+.hint {
+  margin-bottom: 14px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* ---------------- Calendar ---------------- */
+.cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-size: 16px;
+}
+
+.cal-nav {
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.cal-nav:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.cal-week,
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  text-align: center;
+}
+
+.cal-week {
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.cal-day {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.cal-day:hover:not(:disabled) {
+  background: var(--accent-soft);
+}
+
+.cal-day:disabled {
+  color: #c4beb3;
+  cursor: default;
+}
+
+.cal-day.today {
+  font-weight: 800;
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+}
+
+.cal-day.selected {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* little dot under days that already have a plan */
+.cal-day.has-plan::after {
+  content: '';
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  margin-left: -2.5px;
+  background: var(--accent);
+  border-radius: 50%;
+}
+
+.cal-day.selected.has-plan::after {
+  background: #fff;
+}
+
+.cal-legend {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 4px;
+  background: var(--accent);
+  border-radius: 50%;
+}
+
+/* ---------------- Form ---------------- */
+.field {
+  margin-bottom: 14px;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  padding: 11px 14px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.field textarea {
+  resize: vertical;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(61, 90, 76, 0.14);
+}
+
+.new-value {
+  margin-top: 8px;
+}
+
+.btn.full {
+  width: 100%;
+  padding: 12px;
+}
+
+/* ---------------- Plans ---------------- */
+.plans-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  font-size: 22px;
+}
+
+.count-badge {
+  min-width: 28px;
+  padding: 1px 9px;
+  background: var(--accent-soft);
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--accent);
+}
+
+.day-group {
+  margin-bottom: 22px;
+  padding: 6px;
+  margin-left: -6px;
+  margin-right: -6px;
+  border-radius: var(--radius);
+  scroll-margin-top: 90px;
+  transition: background 0.4s;
+}
+
+.day-group.flash {
+  background: var(--accent-soft);
+}
+
+.day-title {
+  margin-bottom: 10px;
+  font-size: 15px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.day-title small {
+  margin-left: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.plan-card {
+  margin-bottom: 10px;
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.plan-top {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.thumbs {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  margin-left: -10px;
+  overflow: hidden;
+  background: var(--accent-soft);
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.thumb:first-child {
+  margin-left: 0;
+}
+
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.plan-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.plan-name {
+  margin-right: 8px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.plan-name:hover {
+  color: var(--accent);
+}
+
+.chip {
+  display: inline-block;
+  padding: 2px 10px;
+  background: var(--accent-soft);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.plan-notes {
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.plan-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.edit-plan {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.edit-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 14px;
+}
+
+.edit-grid .wide {
+  grid-column: 1 / -1;
+}
+
+/* ---------------- Empty state ---------------- */
+.empty {
+  padding: 48px 24px;
+  text-align: center;
+  background: var(--surface);
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius);
+}
+
+.empty h3 {
+  margin-bottom: 6px;
+  font-size: 18px;
+}
+
+.empty p {
+  color: var(--muted);
+}
+
+/* ---------------- Past plans ---------------- */
+.past {
+  margin-top: 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.past summary {
+  padding: 14px 20px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.past[open] summary {
+  border-bottom: 1px solid var(--border);
+}
+
+.past-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.past-row:last-child {
+  border-bottom: none;
+}
+
+.past-date {
+  width: 110px;
+  flex-shrink: 0;
+  color: var(--muted);
+}
+
+.past-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+}
+
+.past-name:hover {
+  color: var(--accent);
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--danger);
+  cursor: pointer;
+}
+
+.link-btn:hover {
+  text-decoration: underline;
+}
+
+/* ---------------- Tablets and phones ---------------- */
+@media (max-width: 960px) {
+  .planner-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .side {
+    position: static;
+    max-height: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .planner-page {
+    padding: 24px 16px 48px;
+  }
+
+  .plan-top {
+    flex-wrap: wrap;
+  }
+
+  .plan-main {
+    flex-basis: calc(100% - 100px);
+  }
+
+  .plan-actions {
+    width: 100%;
+  }
+
+  .edit-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .past-row {
+    flex-wrap: wrap;
+  }
+}

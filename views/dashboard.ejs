@@ -1,0 +1,234 @@
+<%#
+  dashboard.ejs - numbers and charts about your wardrobe, your outfits AND your individual items.
+
+  Your GET /dashboard handler must pass:
+    user    -> { full_name }
+    stats   -> { items, outfits, wears, avgRating (number|null), value, avgCpw (number|null) }
+    charts  -> { sections, colours, months, ratings, topOutfits, topItems, brands, status }
+                 each one is { labels: [...], values: [...] }
+    best    -> items with the LOWEST cost per wear:  [ { item_id, item_name, price, wears, cpw } ]
+    worst   -> items with the HIGHEST cost per wear: same fields
+    unused  -> { total, value, list: [ { item_id, item_name, price } ] }  items never worn
+%>
+<%
+  // Turns data into safe JSON text for the <script> (replacing "<" stops </script> tricks in names)
+  function toJson(data) { return JSON.stringify(data).replace(/</g, '\\u003c'); }
+  function hasData(c) { return c.values.length > 0 && c.values.some(function (v) { return v > 0; }); }
+  function rupees(n) { return '₹' + Math.round(n).toLocaleString('en-IN'); }
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - ClosetIQ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles/app.css">
+  <link rel="stylesheet" href="/styles/dashboard.css">
+</head>
+<body>
+
+  <%- include('partials/header', { active: 'dashboard', user: user }) %>
+
+  <main class="dash-page">
+
+    <h1>Analytics Dashboard</h1>
+    <p class="subtitle">A look at your wardrobe, your outfits and how much wear you get from each item.</p>
+
+    <!-- ============ Number tiles ============ -->
+    <div class="tiles">
+      <div class="tile"><strong><%= stats.items %></strong><span>Items</span></div>
+      <div class="tile"><strong><%= stats.outfits %></strong><span>Outfits</span></div>
+      <div class="tile"><strong><%= stats.wears %></strong><span>Outfits worn</span></div>
+      <div class="tile"><strong><%= stats.avgRating === null ? '-' : stats.avgRating.toFixed(1) %></strong><span>Average rating</span></div>
+      <div class="tile"><strong><%= rupees(stats.value) %></strong><span>Wardrobe value</span></div>
+      <div class="tile"><strong><%= stats.avgCpw === null ? '-' : rupees(stats.avgCpw) %></strong><span>Avg cost per wear</span></div>
+    </div>
+
+    <!-- ============ Wardrobe ============ -->
+    <h2 class="group-title">Your wardrobe</h2>
+    <div class="chart-grid">
+
+      <section class="card">
+        <h2>Items by section</h2>
+        <% if (hasData(charts.sections)) { %>
+          <div class="chart-box"><canvas id="sectionsChart"></canvas></div>
+        <% } else { %><p class="none">Add some items to see this chart.</p><% } %>
+      </section>
+
+      <section class="card">
+        <h2>Items by colour</h2>
+        <% if (hasData(charts.colours)) { %>
+          <div class="chart-box"><canvas id="coloursChart"></canvas></div>
+        <% } else { %><p class="none">Tag your items with a colour to see this chart.</p><% } %>
+      </section>
+
+      <section class="card">
+        <h2>Money spent by brand</h2>
+        <% if (hasData(charts.brands)) { %>
+          <div class="chart-box"><canvas id="brandsChart"></canvas></div>
+        <% } else { %><p class="none">Add purchase prices to your items to see this chart.</p><% } %>
+      </section>
+
+      <section class="card">
+        <h2>Item availability</h2>
+        <% if (hasData(charts.status)) { %>
+          <div class="chart-box"><canvas id="statusChart"></canvas></div>
+        <% } else { %><p class="none">No items yet.</p><% } %>
+      </section>
+
+    </div>
+
+    <!-- ============ Items: how much you really wear them ============ -->
+    <h2 class="group-title">Your items</h2>
+    <div class="chart-grid">
+
+      <section class="card">
+        <h2>Most worn items</h2>
+        <% if (hasData(charts.topItems)) { %>
+          <div class="chart-box"><canvas id="topItemsChart"></canvas></div>
+        <% } else { %><p class="none">Wear some outfits and log them to see your most worn items.</p><% } %>
+      </section>
+
+      <section class="card">
+        <h2>Cost per wear</h2>
+        <p class="hint">Price of the item divided by the times you wore it. The more you wear it, the lower this gets.</p>
+
+        <% if (best.length === 0) { %>
+          <p class="none">Log outfits that contain items with a purchase price to see this.</p>
+        <% } else { %>
+          <h3 class="mini">Best value</h3>
+          <table class="cpw">
+            <% best.forEach(function (item) { %>
+              <tr>
+                <td><a href="/items/<%= item.item_id %>/edit"><%= item.item_name %></a></td>
+                <td class="muted"><%= item.wears %> <%= item.wears === 1 ? 'wear' : 'wears' %></td>
+                <td class="num good"><%= rupees(item.cpw) %></td>
+              </tr>
+            <% }); %>
+          </table>
+
+          <h3 class="mini">Still costly per wear</h3>
+          <table class="cpw">
+            <% worst.forEach(function (item) { %>
+              <tr>
+                <td><a href="/items/<%= item.item_id %>/edit"><%= item.item_name %></a></td>
+                <td class="muted"><%= item.wears %> <%= item.wears === 1 ? 'wear' : 'wears' %></td>
+                <td class="num bad"><%= rupees(item.cpw) %></td>
+              </tr>
+            <% }); %>
+          </table>
+        <% } %>
+      </section>
+
+    </div>
+
+    <section class="card unused">
+      <h2>Not worn yet <span class="badge"><%= unused.total %></span></h2>
+      <% if (unused.total === 0) { %>
+        <p class="none">Every item has been part of a worn outfit. Nice!</p>
+      <% } else { %>
+        <p class="hint">
+          These items have not been part of any outfit in your wear log
+          <% if (unused.value > 0) { %>(<strong><%= rupees(unused.value) %></strong> of your wardrobe value)<% } %>.
+          Try putting them into an outfit.
+        </p>
+        <ul>
+          <% unused.list.forEach(function (item) { %>
+            <li><a href="/items/<%= item.item_id %>/edit"><%= item.item_name %></a></li>
+          <% }); %>
+        </ul>
+        <% if (unused.total > unused.list.length) { %>
+          <p class="hint">...and <%= unused.total - unused.list.length %> more.</p>
+        <% } %>
+      <% } %>
+    </section>
+
+    <!-- ============ Outfits ============ -->
+    <h2 class="group-title">Your outfits</h2>
+    <div class="chart-grid">
+
+      <section class="card wide">
+        <h2>Outfits worn per month</h2>
+        <% if (hasData(charts.months)) { %>
+          <div class="chart-box"><canvas id="monthsChart"></canvas></div>
+        <% } else { %><p class="none">Log what you wear in the Wear Log to see this chart.</p><% } %>
+      </section>
+
+      <section class="card">
+        <h2>What you rate highest</h2>
+        <% if (hasData(charts.ratings)) { %>
+          <div class="chart-box"><canvas id="ratingsChart"></canvas></div>
+        <% } else { %><p class="none">Rate an outfit in the Wear Log to see this chart.</p><% } %>
+      </section>
+
+      <section class="card">
+        <h2>Most worn outfits</h2>
+        <% if (hasData(charts.topOutfits)) { %>
+          <div class="chart-box"><canvas id="topChart"></canvas></div>
+        <% } else { %><p class="none">Nothing worn yet.</p><% } %>
+      </section>
+
+    </div>
+
+  </main>
+
+  <!-- Chart.js, loaded from a CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script>
+    var charts = <%- toJson(charts) %>;
+
+    // colours that match the site
+    var palette = ['#3d5a4c', '#6b8f7b', '#a3bfb0', '#c9a66b', '#d98e73', '#8c7ab5', '#5b8db8', '#b5b5a3'];
+
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.color = '#6b665c';
+
+    // draws a chart only if its <canvas> exists (the page skips it when there is no data)
+    function draw(id, config) {
+      var canvas = document.getElementById(id);
+      if (canvas) new Chart(canvas, config);
+    }
+
+    var noGrid = { grid: { display: false } };
+    var whole = { beginAtZero: true, ticks: { precision: 0 } };   // whole numbers only
+    var noLegend = { legend: { display: false } };
+
+    // shows rupee amounts on an axis / tooltip
+    function rupeeTick(value) { return '₹' + Number(value).toLocaleString('en-IN'); }
+
+    function doughnut(id, data) {
+      draw(id, {
+        type: 'doughnut',
+        data: { labels: data.labels, datasets: [{ data: data.values, backgroundColor: palette, borderWidth: 2 }] },
+        options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+      });
+    }
+
+    function bars(id, data, colour, horizontal, scalesForValues) {
+      var valueAxis = scalesForValues;
+      draw(id, {
+        type: 'bar',
+        data: { labels: data.labels, datasets: [{ data: data.values, backgroundColor: colour, borderRadius: 6 }] },
+        options: {
+          indexAxis: horizontal ? 'y' : 'x',
+          maintainAspectRatio: false,
+          plugins: noLegend,
+          scales: horizontal ? { y: noGrid, x: valueAxis } : { x: noGrid, y: valueAxis }
+        }
+      });
+    }
+
+    doughnut('sectionsChart', charts.sections);
+    doughnut('statusChart', charts.status);
+    bars('coloursChart', charts.colours, palette[0], false, whole);
+    bars('monthsChart', charts.months, palette[1], false, whole);
+    bars('ratingsChart', charts.ratings, palette[3], false, { min: 0, max: 5 });
+    bars('topChart', charts.topOutfits, palette[0], true, whole);
+    bars('topItemsChart', charts.topItems, palette[1], true, whole);
+    bars('brandsChart', charts.brands, palette[3], true, { beginAtZero: true, ticks: { callback: rupeeTick } });
+  </script>
+</body>
+</html>

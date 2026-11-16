@@ -1,0 +1,245 @@
+/* app.css - shared styles for every page AFTER login:
+   colours, base styles, buttons and the header.
+   Page-specific styles live in their own file (wardrobe.css, outfits.css ...). */
+
+:root {
+  --bg: #faf8f5;
+  --surface: #ffffff;
+  --tint: #f1ede6;
+  --text: #1d1a16;
+  --muted: #6b665e;
+  --border: #e8e3da;
+  --accent: #3d5a4c;
+  --accent-dark: #2d463a;
+  --accent-soft: #e4ece7;
+  --danger: #b3382c;
+  --danger-soft: #fbeceb;
+  --warn: #9a6a12;
+  --warn-soft: #fbf1dc;
+  --radius: 18px;
+  --shadow: 0 4px 20px rgba(29, 26, 22, 0.06);
+  --shadow-hover: 0 12px 32px rgba(29, 26, 22, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ---------------- Buttons ---------------- */
+.btn {
+  display: inline-block;
+  padding: 10px 22px;
+  border: 1.5px solid transparent;
+  border-radius: 999px;
+  background: none;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--accent-dark);
+}
+
+.btn-outline {
+  border-color: var(--border);
+  color: var(--text);
+  background: var(--surface);
+}
+
+.btn-outline:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn-danger {
+  border-color: var(--border);
+  color: var(--danger);
+  background: var(--surface);
+}
+
+.btn-danger:hover {
+  border-color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.btn-small {
+  padding: 8px 14px;
+  font-size: 13px;
+}
+
+/* ---------------- Header ---------------- */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(250, 248, 245, 0.92);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+
+.app-header-inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.8px;
+}
+
+.logo span {
+  color: var(--accent);
+}
+
+.app-nav {
+  display: flex;
+  gap: 4px;
+}
+
+.app-nav a {
+  padding: 8px 14px;
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background 0.2s, color 0.2s;
+}
+
+.app-nav a:hover {
+  background: var(--tint);
+  color: var(--text);
+}
+
+.app-nav a.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.app-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* ---------------- Small screens ---------------- */
+@media (max-width: 960px) {
+  .app-header-inner {
+    flex-wrap: wrap;
+    gap: 10px 16px;
+  }
+
+  /* nav drops to its own row and scrolls sideways if needed */
+  .app-nav {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .app-profile-name {
+    display: none;
+  }
+
+  .app-profile {
+    padding: 4px;
+  }
+}
+
+/* ---------------- Profile button in the header ---------------- */
+.app-profile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 4px 4px;
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  font-weight: 600;
+  color: var(--text);
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.app-profile:hover,
+.app-profile.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background: var(--accent);
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.section-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.section-tabs a {
+  padding: 9px 20px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.section-tabs a:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.section-tabs a.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}

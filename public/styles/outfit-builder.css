@@ -1,0 +1,482 @@
+/* outfit-builder.css - styles only for the outfit builder (outfit-builder.ejs).
+   Colours, buttons and the header come from app.css. */
+
+[hidden] {
+  display: none !important;
+}
+
+.builder-page {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 28px 24px 96px;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 14px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.back-link:hover {
+  color: var(--text);
+}
+
+.builder-page h1 {
+  font-size: 32px;
+  letter-spacing: -1px;
+  line-height: 1.2;
+}
+
+.subtitle {
+  margin-bottom: 22px;
+  color: var(--muted);
+}
+
+.error-box {
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  background: var(--danger-soft);
+  border: 1px solid #f0c9c5;
+  border-radius: 10px;
+  color: var(--danger);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* ---------------- Two columns: items + outfit panel ---------------- */
+.builder-layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 28px;
+  align-items: start;
+}
+
+/* ---------------- Item picker ---------------- */
+.picker-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.picker-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.picker-tab {
+  padding: 8px 18px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.picker-tab:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.picker-tab.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+#pickerSearch {
+  width: 240px;
+  max-width: 100%;
+  padding: 9px 16px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text);
+}
+
+#pickerSearch:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(61, 90, 76, 0.12);
+}
+
+.pick-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 14px;
+}
+
+.pick-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 8px 12px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.pick-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.pick-card.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(61, 90, 76, 0.15);
+}
+
+.pick-image {
+  position: relative;
+  display: block;
+  aspect-ratio: 1 / 1;
+  margin-bottom: 8px;
+  overflow: hidden;
+  background: var(--accent-soft);
+  border-radius: 10px;
+}
+
+.pick-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pick-letter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 44px;
+  font-weight: 800;
+  color: var(--accent);
+  opacity: 0.8;
+}
+
+/* round tick, only visible when the card is selected */
+.pick-check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  background: var(--accent);
+  border-radius: 50%;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.pick-card.selected .pick-check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.pick-status {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  padding: 2px 10px;
+  background: var(--warn-soft);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--warn);
+}
+
+.pick-name {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text);
+}
+
+.pick-brand {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.no-results {
+  padding: 32px 0;
+  text-align: center;
+  color: var(--muted);
+}
+
+.empty {
+  padding: 56px 24px;
+  text-align: center;
+  background: var(--surface);
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius);
+}
+
+.empty h3 {
+  margin-bottom: 6px;
+  font-size: 20px;
+}
+
+.empty p {
+  margin-bottom: 20px;
+  color: var(--muted);
+}
+
+/* ---------------- Outfit panel (right) ---------------- */
+.outfit-panel {
+  position: sticky;
+  top: 84px;
+  max-height: calc(100vh - 104px);  /* scrolls on its own if it gets tall */
+  overflow-y: auto;
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.outfit-panel h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  font-size: 18px;
+}
+
+.count-badge {
+  min-width: 26px;
+  padding: 1px 8px;
+  background: var(--accent-soft);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--accent);
+}
+
+.hint {
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.tray {
+  list-style: none;
+  margin-bottom: 16px;
+}
+
+.tray li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 4px 8px 12px;
+  margin-bottom: 6px;
+  background: var(--bg);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.tray li span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tray li small {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.tray-remove {
+  width: 26px;
+  height: 26px;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.tray-remove:hover {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+/* form fields in the panel */
+.field {
+  margin-bottom: 16px;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.field input[type="text"],
+.field textarea {
+  width: 100%;
+  padding: 11px 14px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.field textarea {
+  resize: vertical;
+}
+
+.field input[type="text"]:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(61, 90, 76, 0.14);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.chip-check input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.chip-check span {
+  display: inline-block;
+  padding: 6px 14px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.chip-check input:checked + span {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.chip-check input:focus-visible + span {
+  box-shadow: 0 0 0 3px rgba(61, 90, 76, 0.25);
+}
+
+.fav-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.fav-check input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
+.save-btn {
+  width: 100%;
+  padding: 13px;
+  font-size: 16px;
+}
+
+.save-btn:disabled {
+  background: var(--border);
+  color: var(--muted);
+  cursor: not-allowed;
+  transform: none;
+}
+
+#saveHint {
+  margin: 10px 0 0;
+  text-align: center;
+}
+
+/* ---------------- Mobile bar (only on small screens) ---------------- */
+.mobile-bar {
+  display: none;
+}
+
+@media (max-width: 960px) {
+  .builder-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .outfit-panel {
+    position: static;
+    max-height: none;
+  }
+
+  .mobile-bar {
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: var(--accent);
+    border-radius: 999px;
+    box-shadow: var(--shadow-hover);
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+  }
+}
+
+@media (max-width: 480px) {
+  .builder-page {
+    padding: 24px 16px 96px;
+  }
+
+  .pick-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  #pickerSearch {
+    width: 100%;
+  }
+}

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClosetIQ - Smart Wardrobe & Outfit Planner</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Starts with "/" so it works from any URL. Express serves the "public" folder. -->
+  <link rel="stylesheet" href="/styles/home.css">
+</head>
+<body>
+
+  <!-- ================= HEADER ================= -->
+  <header class="header">
+    <div class="header-inner">
+      <a href="/" class="logo">Closet<span>IQ</span></a>
+
+      <!-- These two links scroll down this same page (no server request) -->
+      <nav class="header-links">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How it works</a>
+      </nav>
+
+      <!-- These two links send a GET request to /login and /register -->
+      <div class="header-buttons">
+        <a href="/login" class="btn btn-ghost">Login</a>
+        <a href="/register" class="btn btn-primary">Register</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ================= HERO ================= -->
+    <section class="hero">
+      <div class="hero-text">
+        <span class="badge">Smart wardrobe &amp; outfit planner</span>
+        <h1>Know what to wear, <em>every single day.</em></h1>
+        <p>
+          Keep all your clothes in one place, build outfits in a few clicks,
+          plan ahead, and let your own ratings tell you which looks work best.
+        </p>
+        <div class="hero-buttons">
+          <a href="/register" class="btn btn-primary btn-large">Get started - it's free</a>
+          <a href="/login" class="btn btn-outline btn-large">I have an account</a>
+        </div>
+      </div>
+
+      <!-- A small preview card made with HTML/CSS, only for decoration -->
+      <div class="hero-preview" aria-hidden="true">
+        <div class="preview-card">
+          <div class="preview-top">
+            <span class="preview-title">Casual College Look</span>
+            <span class="preview-score">4.75 / 5</span>
+          </div>
+          <div class="preview-items">
+            <div class="preview-item" style="--tone:#c9d6e8"><span>Blue Denim Jacket</span></div>
+            <div class="preview-item" style="--tone:#ece6da"><span>White T-Shirt</span></div>
+            <div class="preview-item" style="--tone:#d9d4cc"><span>Black Jeans</span></div>
+          </div>
+          <div class="preview-footer">Planned for Friday &bull; College</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= FEATURES ================= -->
+    <section class="section" id="features">
+      <div class="section-head">
+        <h2>Everything your wardrobe needs</h2>
+        <p>Five tools that work together, from adding a shirt to seeing your wardrobe statistics.</p>
+      </div>
+
+      <div class="feature-grid">
+        <article class="feature">
+          <div class="feature-icon">&#128090;</div>
+          <h3>Wardrobe</h3>
+          <p>Add your clothes with photos, then search and filter by type, colour, season and fabric.</p>
+        </article>
+
+        <article class="feature">
+          <div class="feature-icon">&#129509;</div>
+          <h3>Outfits</h3>
+          <p>Pick items as cards and combine them into complete looks. Mark your favourites.</p>
+        </article>
+
+        <article class="feature">
+          <div class="feature-icon">&#128197;</div>
+          <h3>Outfit Planner</h3>
+          <p>Choose an outfit, an occasion and a date, and see everything coming up in one place.</p>
+        </article>
+
+        <article class="feature">
+          <div class="feature-icon">&#11088;</div>
+          <h3>Wear Log Tracker</h3>
+          <p>Record when you wore an outfit and rate its colour, size, comfort and style.</p>
+        </article>
+
+        <article class="feature">
+          <div class="feature-icon">&#128202;</div>
+          <h3>Analytics Dashboard</h3>
+          <p>See your wardrobe value, favourite outfits, top-rated looks and category breakdown.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= HOW IT WORKS ================= -->
+    <section class="section section-tinted" id="how-it-works">
+      <div class="section-head">
+        <h2>How it works</h2>
+        <p>Four simple steps, and ClosetIQ starts learning what you like.</p>
+      </div>
+
+      <ol class="steps">
+        <li class="step">
+          <span class="step-number">1</span>
+          <h3>Add your clothes</h3>
+          <p>Upload a photo and pick the type, colour, season and brand from dropdowns.</p>
+        </li>
+        <li class="step">
+          <span class="step-number">2</span>
+          <h3>Build outfits</h3>
+          <p>Select items visually and save them as an outfit for any occasion.</p>
+        </li>
+        <li class="step">
+          <span class="step-number">3</span>
+          <h3>Plan and wear</h3>
+          <p>Schedule outfits ahead, then log each time you actually wear one.</p>
+        </li>
+        <li class="step">
+          <span class="step-number">4</span>
+          <h3>Get recommendations</h3>
+          <p>Your ratings produce a score, and your top 3 outfits rise to the top.</p>
+        </li>
+      </ol>
+    </section>
+
+    <!-- ================= FINAL CALL TO ACTION ================= -->
+    <section class="cta">
+      <h2>Ready to organise your wardrobe?</h2>
+      <p>Create your account and add your first item in under a minute.</p>
+      <a href="/register" class="btn btn-light btn-large">Create free account</a>
+    </section>
+
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="footer">
+    <span class="logo logo-small">Closet<span>IQ</span></span>
+    <span>Smart Wardrobe &amp; Outfit Planner &bull; A DBMS project</span>
+  </footer>
+
+</body>
+</html>

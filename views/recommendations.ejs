@@ -1,0 +1,103 @@
+<%#
+  recommendations.ejs - your top outfits, ranked by how well you rated them.
+
+  Your GET /recommendations handler must pass:
+    user              -> { full_name }
+    picks             -> top outfits (best first): [ { outfit_id, outfit_name, score, wearCount, lastWorn,
+                           avgColour, avgSize, avgComfort, avgStyle, unavailable (true/false),
+                           items: [ { item_name, image_url } ] } ]
+    occasions         -> [ { occasion_id, occasion_name } ]
+    selectedOccasion  -> occasion id as a number, or null
+    weights           -> { colour, size, comfort, style }
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recommendations - ClosetIQ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles/app.css">
+  <link rel="stylesheet" href="/styles/recommendations.css">
+</head>
+<body>
+
+  <%- include('partials/header', { active: 'recommendations', user: user }) %>
+
+  <main class="rec-page">
+
+    <h1>Recommended for you</h1>
+    <p class="subtitle">Your best-rated outfits, based on your wear log.</p>
+
+    <!-- Choosing an occasion reloads the page with ?occasion=ID -->
+    <form action="/recommendations" method="GET" class="filter">
+      <label for="occasion">Occasion</label>
+      <select id="occasion" name="occasion" onchange="this.form.submit()">
+        <option value="">Any occasion</option>
+        <% occasions.forEach(function (o) { %>
+          <option value="<%= o.occasion_id %>" <%= selectedOccasion === o.occasion_id ? 'selected' : '' %>><%= o.occasion_name %></option>
+        <% }); %>
+      </select>
+      <noscript><button type="submit" class="btn btn-small btn-outline">Apply</button></noscript>
+    </form>
+
+    <% if (picks.length === 0) { %>
+      <div class="empty">
+        <h3>No recommendations yet</h3>
+        <p><%= selectedOccasion ? 'No rated outfits for this occasion yet.' : 'Log a few outfits you have worn and rate them. Your favourites will show up here.' %></p>
+        <a href="/wear-log" class="btn btn-primary">Go to wear log</a>
+      </div>
+    <% } %>
+
+    <div class="pick-list">
+      <% picks.forEach(function (pick, index) { %>
+        <article class="pick">
+          <div class="rank">#<%= index + 1 %></div>
+
+          <div class="thumbs">
+            <% pick.items.forEach(function (item) { %>
+              <span class="thumb">
+                <% if (item.image_url) { %>
+                  <img src="<%= item.image_url %>" alt="<%= item.item_name %>" loading="lazy">
+                <% } else { %>
+                  <%= item.item_name.charAt(0).toUpperCase() %>
+                <% } %>
+              </span>
+            <% }); %>
+          </div>
+
+          <div class="pick-main">
+            <a href="/outfits/<%= pick.outfit_id %>" class="pick-name"><%= pick.outfit_name %></a>
+            <p class="pick-meta">
+              Worn <%= pick.wearCount %> <%= pick.wearCount === 1 ? 'time' : 'times' %>
+              <% if (pick.lastWorn) { %>&bull; last on <%= new Date(pick.lastWorn + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) %><% } %>
+            </p>
+            <div class="ratings">
+              <span>Colour <b><%= pick.avgColour.toFixed(1) %></b></span>
+              <span>Fit <b><%= pick.avgSize.toFixed(1) %></b></span>
+              <span>Comfort <b><%= pick.avgComfort.toFixed(1) %></b></span>
+              <span>Style <b><%= pick.avgStyle.toFixed(1) %></b></span>
+            </div>
+            <% if (pick.unavailable) { %>
+              <p class="warn">Some items are in the laundry or unavailable right now.</p>
+            <% } %>
+          </div>
+
+          <div class="score"><%= pick.score.toFixed(1) %><small>/5</small></div>
+        </article>
+      <% }); %>
+    </div>
+
+    <% if (picks.length > 0) { %>
+      <p class="how">
+        Score = your ratings combined using your priorities (colour <%= weights.colour %>, fit <%= weights.size %>,
+        comfort <%= weights.comfort %>, style <%= weights.style %>), averaged over every time you wore the outfit.
+        Ties go to the outfit you have worn more.
+      </p>
+    <% } %>
+
+  </main>
+</body>
+</html>

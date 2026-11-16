@@ -1,0 +1,33 @@
+<%#
+  Shared header for every page after login.
+  A page includes it with the include() tag, passing two values:
+  active (which nav link to highlight, e.g. 'wardrobe') and user.
+  The link paths below are my guess - change them to match your routes.
+%>
+<header class="app-header">
+  <div class="app-header-inner">
+
+    <a href="/wardrobe" class="logo">Closet<span>IQ</span></a>
+
+    <nav class="app-nav">
+      <a href="/wardrobe" class="<%= active === 'wardrobe' ? 'active' : '' %>">Wardrobe</a>
+      <a href="/outfits" class="<%= active === 'outfits' ? 'active' : '' %>">Outfits</a>
+      <a href="/planner" class="<%= active === 'planner' ? 'active' : '' %>">Outfit Planner</a>
+      <a href="/wear-log" class="<%= active === 'wear-log' ? 'active' : '' %>">Wear Log Tracker</a>
+      <a href="/recommendations" class="<%= active === 'recommendations' ? 'active' : '' %>">Recommendations</a>
+      <a href="/dashboard" class="<%= active === 'dashboard' ? 'active' : '' %>">Analytics Dashboard</a>
+    </nav>
+
+    <div class="app-user">
+      <a href="/profile" class="app-profile <%= active === 'profile' ? 'active' : '' %>" title="Your profile and preferences">
+        <span class="avatar"><%= user.full_name.trim().charAt(0).toUpperCase() %></span>
+        <span class="app-profile-name"><%= user.full_name.trim().split(' ')[0] %></span>
+      </a>
+      <!-- Logout is a POST so a link or a prefetch can't log someone out by accident -->
+      <form action="/logout" method="POST">
+        <button type="submit" class="btn btn-small btn-outline">Log out</button>
+      </form>
+    </div>
+
+  </div>
+</header>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - ClosetIQ</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/styles/login.css">
+</head>
+<body>
+
+  <div class="login-layout">
+
+    <!-- LEFT: brand panel (hidden on small screens) -->
+    <aside class="brand-panel">
+      <a href="/" class="logo">Closet<span>IQ</span></a>
+
+      <div class="brand-text">
+        <h2>Welcome back to your wardrobe.</h2>
+        <p>Pick up where you left off: your items, outfits and plans are waiting.</p>
+      </div>
+
+      <ul class="brand-points">
+        <li>Browse and filter every item you own</li>
+        <li>Build and plan outfits in a few clicks</li>
+        <li>See which looks score best</li>
+      </ul>
+    </aside>
+
+    <!-- RIGHT: the login form -->
+    <main class="form-panel">
+      <div class="form-box">
+
+        <a href="/" class="logo logo-mobile">Closet<span>IQ</span></a>
+
+        <h1>Log in</h1>
+        <p class="subtitle">Enter your email and password to continue.</p>
+
+        <!-- Your POST /login handler can send an error like this:
+             res.render('login', { error: 'Incorrect email or password.', email: req.body.email })
+             If you render the page without an error, this box is simply not shown. -->
+        <% if (typeof error !== 'undefined' && error) { %>
+          <div class="error-box">
+            <%= error %> 
+            <br>New here? <a href="/register"><b>Create an account</b></a>
+          </div>
+        <% } %>
+
+        <!-- Submitting sends a POST request to /login with the fields "email" and "password" -->
+        <form action="/login" method="POST">
+
+          <div class="field">
+            <label for="email">Email</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              placeholder="you@example.com"
+              value="<%= typeof email !== 'undefined' ? email : '' %>"
+              autocomplete="email"
+              required
+              autofocus
+            >
+          </div>
+
+          <div class="field">
+            <label for="password">Password</label>
+            <div class="password-wrap">
+              <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Your password"
+                autocomplete="current-password"
+                required
+              >
+              <button type="button" class="toggle-password" id="togglePassword">Show</button>
+            </div>
+          </div>
+          <button type="submit" class="btn-submit">Log in</button>
+        </form>
+        <p class="switch-text">New to ClosetIQ? <a href="/register">Create an account</a></p>
+        <a href="/" class="back-link">&larr; Back to home</a>
+      </div>
+    </main>
+  </div>
+  <!-- Tiny script: the Show/Hide button next to the password -->
+  <script>
+    var passwordInput = document.getElementById('password');
+    var toggleButton = document.getElementById('togglePassword');
+
+    toggleButton.addEventListener('click', function () {
+      var isHidden = passwordInput.type === 'password';
+      passwordInput.type = isHidden ? 'text' : 'password';
+      toggleButton.textContent = isHidden ? 'Hide' : 'Show';
+    });
+  </script>
+  <script>
+    history.replaceState(null, '', '/login');
+  </script>
+</body>
+</html>

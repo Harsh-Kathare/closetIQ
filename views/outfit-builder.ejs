@@ -1,0 +1,270 @@
+<%#
+  outfit-builder.ejs - create an outfit by tapping item cards.
+
+  Your GET /outfits/new handler must pass:
+    user         -> { full_name }
+    items        -> every item of the user, each with: item_id, item_name, brand_name,
+                    image_url, availability_status, section ('Clothing', ...), tags (array of text)
+    sections     -> [ { category_name }, ... ]   (used for the tabs)
+    occasions    -> [ { occasion_id, occasion_name }, ... ]
+    preselected  -> array of item_ids that start ticked (e.g. from the "Add to Outfit" button)
+    error        -> text of an error message, or null
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create outfit - ClosetIQ</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/styles/app.css">
+  <link rel="stylesheet" href="/styles/outfit-builder.css">
+</head>
+<body>
+
+  <%- include('partials/header', { active: 'outfits', user: user }) %>
+
+  <main class="builder-page">
+
+    <a href="/outfits" class="back-link">&larr; Back to outfits</a>
+    <h1>Create an outfit</h1>
+    <p class="subtitle">Tap items to add them to your outfit, then give it a name.</p>
+
+    <% if (error) { %>
+      <div class="error-box"><%= error %></div>
+    <% } %>
+
+    <!-- Saving sends a POST request to /outfits -->
+    <form action="/outfits" method="POST" id="outfitForm">
+      <div class="builder-layout">
+
+        <!-- ============ LEFT: pick items ============ -->
+        <section class="picker">
+
+          <div class="picker-tools">
+            <div class="picker-tabs" id="pickerTabs">
+              <button type="button" class="picker-tab active" data-section="all">All</button>
+              <% sections.forEach(function (s) { %>
+                <button type="button" class="picker-tab" data-section="<%= s.category_name %>"><%= s.category_name %></button>
+              <% }); %>
+            </div>
+            <input type="search" id="pickerSearch" placeholder="Search your items...">
+          </div>
+
+          <% if (items.length === 0) { %>
+            <div class="empty">
+              <h3>Your wardrobe is empty</h3>
+              <p>Add some clothing items first, then come back to build an outfit.</p>
+              <a href="/items/new" class="btn btn-primary">+ Add item</a>
+            </div>
+          <% } else { %>
+
+            <div class="pick-grid" id="pickGrid">
+              <% items.forEach(function (item) { %>
+                <button type="button" class="pick-card"
+                        data-id="<%= item.item_id %>"
+                        data-section="<%= item.section || 'Other' %>"
+                        data-name="<%= item.item_name %>"
+                        data-search="<%= (item.item_name + ' ' + (item.brand_name || '') + ' ' + item.tags.join(' ')).toLowerCase() %>">
+                  <span class="pick-image">
+                    <% if (item.image_url) { %>
+                      <img src="<%= item.image_url %>" alt="" loading="lazy">
+                    <% } else { %>
+                      <span class="pick-letter"><%= item.item_name.charAt(0).toUpperCase() %></span>
+                    <% } %>
+                    <span class="pick-check">&#10003;</span>
+                    <% if (item.availability_status !== 'Available') { %>
+                      <span class="pick-status"><%= item.availability_status %></span>
+                    <% } %>
+                  </span>
+                  <span class="pick-name"><%= item.item_name %></span>
+                  <span class="pick-brand"><%= item.brand_name || 'No brand' %></span>
+                </button>
+              <% }); %>
+            </div>
+
+            <p class="no-results" id="noResults" hidden>No items match your search.</p>
+
+          <% } %>
+        </section>
+
+        <!-- ============ RIGHT: the outfit so far ============ -->
+        <aside class="outfit-panel" id="outfitPanel">
+
+          <h2>Your outfit <span class="count-badge" id="countBadge">0</span></h2>
+
+          <p class="hint" id="trayEmpty">Nothing selected yet. Tap an item on the left.</p>
+          <ul class="tray" id="trayList"></ul>
+
+          <!-- The script puts one hidden input here for every selected item,
+               so the form sends them all as "item" -->
+          <div id="hiddenItems"></div>
+
+          <div class="field">
+            <label for="outfit_name">Outfit name</label>
+            <input type="text" id="outfit_name" name="outfit_name" maxlength="100"
+                   placeholder="e.g. Casual College Look" required>
+          </div>
+
+          <div class="field">
+            <label for="description">Description (optional)</label>
+            <textarea id="description" name="description" rows="2"
+                      placeholder="When would you wear this?"></textarea>
+          </div>
+
+          <div class="field">
+            <label>Occasions</label>
+            <div class="chips">
+              <% occasions.forEach(function (occasion) { %>
+                <label class="chip-check">
+                  <input type="checkbox" name="occasion" value="<%= occasion.occasion_id %>">
+                  <span><%= occasion.occasion_name %></span>
+                </label>
+              <% }); %>
+            </div>
+            <input type="text" name="new_occasion" maxlength="50" class="other-occasion"
+                   placeholder="Another occasion? Type it here (optional)">
+          </div>
+
+          <label class="fav-check">
+            <input type="checkbox" name="is_favorite" value="1">
+            <span>&#9829; Mark as favourite</span>
+          </label>
+
+          <button type="submit" class="btn btn-primary save-btn" id="saveBtn" disabled>Save outfit</button>
+          <p class="hint" id="saveHint">Pick at least one item and give the outfit a name.</p>
+
+        </aside>
+
+      </div>
+    </form>
+
+    <!-- On phones the outfit panel is below the items; this bar jumps to it -->
+    <a href="#outfitPanel" class="mobile-bar" id="mobileBar">
+      <span><strong id="mobileCount">0</strong> selected</span>
+      <span>Review &amp; save &darr;</span>
+    </a>
+
+  </main>
+
+  <script>
+    // ---------- state: which items are selected ----------
+    // selected = { itemId: { id, name, section } }  (the list below shows them sorted by id)
+    var selected = {};
+    var preselected = <%- JSON.stringify(preselected) %>;
+
+    var grid = document.getElementById('pickGrid');
+    var cards = grid ? Array.prototype.slice.call(grid.querySelectorAll('.pick-card')) : [];
+    var trayList = document.getElementById('trayList');
+    var trayEmpty = document.getElementById('trayEmpty');
+    var hiddenItems = document.getElementById('hiddenItems');
+    var countBadge = document.getElementById('countBadge');
+    var mobileCount = document.getElementById('mobileCount');
+    var nameInput = document.getElementById('outfit_name');
+    var saveBtn = document.getElementById('saveBtn');
+    var saveHint = document.getElementById('saveHint');
+
+    function cardById(id) {
+      return cards.find(function (c) { return c.dataset.id === String(id); });
+    }
+
+    function toggleItem(id) {
+      var card = cardById(id);
+      if (!card) return;
+      if (selected[id]) {
+        delete selected[id];
+        card.classList.remove('selected');
+      } else {
+        selected[id] = { id: id, name: card.dataset.name, section: card.dataset.section };
+        card.classList.add('selected');
+      }
+      refresh();
+    }
+
+    // redraw the "Your outfit" list, the hidden inputs and the Save button
+    function refresh() {
+      var ids = Object.keys(selected);
+
+      trayList.innerHTML = '';
+      hiddenItems.innerHTML = '';
+
+      ids.forEach(function (id) {
+        var item = selected[id];
+
+        // list row (textContent keeps item names safe)
+        var li = document.createElement('li');
+        var label = document.createElement('span');
+        label.textContent = item.name;
+        var small = document.createElement('small');
+        small.textContent = item.section;
+        var remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'tray-remove';
+        remove.setAttribute('aria-label', 'Remove ' + item.name);
+        remove.innerHTML = '&times;';
+        remove.addEventListener('click', function () { toggleItem(id); });
+        li.appendChild(label);
+        li.appendChild(small);
+        li.appendChild(remove);
+        trayList.appendChild(li);
+
+        // hidden input -> sent to the server as "item"
+        var input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'item';
+        input.value = id;
+        hiddenItems.appendChild(input);
+      });
+
+      trayEmpty.hidden = ids.length > 0;
+      countBadge.textContent = ids.length;
+      mobileCount.textContent = ids.length;
+
+      var ready = ids.length > 0 && nameInput.value.trim() !== '';
+      saveBtn.disabled = !ready;
+      saveHint.hidden = ready;
+    }
+
+    cards.forEach(function (card) {
+      card.addEventListener('click', function () { toggleItem(card.dataset.id); });
+    });
+    nameInput.addEventListener('input', refresh);
+
+    // ---------- section tabs + search (they only hide/show cards, nothing is lost) ----------
+    var activeSection = 'all';
+    var searchBox = document.getElementById('pickerSearch');
+    var noResults = document.getElementById('noResults');
+
+    function applyFilter() {
+      var text = searchBox.value.trim().toLowerCase();
+      var visible = 0;
+      cards.forEach(function (card) {
+        var okSection = activeSection === 'all' || card.dataset.section === activeSection;
+        var okText = text === '' || card.dataset.search.indexOf(text) !== -1;
+        card.hidden = !(okSection && okText);
+        if (!card.hidden) visible++;
+      });
+      if (noResults) noResults.hidden = visible > 0 || cards.length === 0;
+    }
+
+    document.querySelectorAll('.picker-tab').forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        document.querySelectorAll('.picker-tab').forEach(function (t) { t.classList.remove('active'); });
+        tab.classList.add('active');
+        activeSection = tab.dataset.section;
+        applyFilter();
+      });
+    });
+    searchBox.addEventListener('input', applyFilter);
+
+    // ---------- start: tick the preselected items ----------
+    preselected.forEach(function (id) { toggleItem(id); });
+    refresh();
+  </script>
+
+</body>
+</html>

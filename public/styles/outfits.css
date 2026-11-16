@@ -1,0 +1,307 @@
+/* outfits.css - styles only for the outfits list (outfits.ejs).
+   Colours, buttons and the header come from app.css. */
+
+.page {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+
+/* ---------------- Title row ---------------- */
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.page-head h1 {
+  font-size: 32px;
+  letter-spacing: -1px;
+  line-height: 1.2;
+}
+
+.count {
+  font-size: 15px;
+  color: var(--muted);
+}
+
+/* ---------------- Filters row ---------------- */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 340px;
+  max-width: 100%;
+  padding: 6px 6px 6px 18px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-box:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(61, 90, 76, 0.12);
+}
+
+.search-box input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--text);
+}
+
+.toolbar select {
+  padding: 10px 16px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.toolbar select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.fav-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.fav-filter input {
+  accent-color: var(--accent);
+}
+
+.clear-link {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.clear-link:hover {
+  text-decoration: underline;
+}
+
+/* ---------------- Outfit cards ---------------- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 22px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+}
+
+/* picture area: 1 to 4 item pictures */
+.mosaic {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2px;
+  aspect-ratio: 1 / 1;
+  background: var(--surface);
+}
+
+.mosaic-1 {
+  grid-template-columns: 1fr;
+}
+
+.mosaic-3 .thumb:nth-child(3) {
+  grid-column: 1 / -1;
+}
+
+.thumb {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--accent-soft);
+}
+
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.thumb-letter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 40px;
+  font-weight: 800;
+  color: var(--accent);
+  opacity: 0.8;
+}
+
+.more {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(29, 26, 22, 0.78);
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* heart button, top right of the picture */
+.heart {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  background: var(--surface);
+  border: none;
+  border-radius: 50%;
+  box-shadow: var(--shadow);
+  font-size: 20px;
+  line-height: 1;
+  color: #c9c3b8;
+  cursor: pointer;
+  transition: transform 0.2s, color 0.2s;
+}
+
+.heart:hover {
+  transform: scale(1.1);
+}
+
+.heart.on {
+  color: var(--danger);
+}
+
+.card-body {
+  flex: 1;
+  padding: 16px 18px 12px;
+}
+
+.card-body h3 {
+  font-size: 17px;
+  line-height: 1.3;
+}
+
+.description {
+  margin-top: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.chip {
+  padding: 3px 10px;
+  background: var(--accent-soft);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.meta {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.card-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 0 18px 18px;
+}
+
+.card-actions form {
+  display: contents; /* lets Delete sit in the grid like View */
+}
+
+.card-actions .btn {
+  width: 100%;
+}
+
+/* ---------------- Empty state ---------------- */
+.empty {
+  padding: 64px 24px;
+  text-align: center;
+  background: var(--surface);
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius);
+}
+
+.empty h3 {
+  margin-bottom: 6px;
+  font-size: 20px;
+}
+
+.empty p {
+  margin-bottom: 20px;
+  color: var(--muted);
+}
+
+@media (max-width: 600px) {
+  .page {
+    padding: 24px 16px 48px;
+  }
+
+  .page-head h1 {
+    font-size: 26px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
